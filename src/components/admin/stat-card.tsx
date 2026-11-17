@@ -63,13 +63,13 @@ export function StatCard({
 }) {
   return (
     <div data-admin-card className="relative overflow-hidden rounded-xl bg-card p-4">
-      <p className="flex items-center justify-between gap-2 text-[13px] font-semibold">
+      <p className="flex items-center justify-between gap-2 text-[13px] font-medium">
         <span className="border-b border-dashed border-muted-foreground/50 pb-px">{label}</span>
         <Icon className="size-3.5 text-muted-foreground/70" aria-hidden />
       </p>
       <div className="mt-2 flex items-end justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xl leading-7 font-bold tracking-tight tabular-nums">{value}</p>
+          <p className="text-xl leading-7 font-semibold tracking-[-0.02em] tabular-nums">{value}</p>
           <div className="mt-1 flex items-center gap-2">
             {delta !== undefined && <Delta value={delta} />}
             {hint && <span className="text-xs text-muted-foreground">{hint}</span>}

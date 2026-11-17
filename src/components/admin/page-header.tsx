@@ -27,13 +27,13 @@ export function PageHeader({
               href={back.href}
               aria-label={back.label}
               title={back.label}
-              className="mt-px grid size-7 shrink-0 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-black/[0.06] hover:text-foreground dark:hover:bg-white/10"
+              className="mt-px grid size-7 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-black/[0.05] hover:text-foreground dark:hover:bg-white/10"
             >
               <ArrowLeft className="size-4" />
             </Link>
           )}
           <div className="min-w-0">
-            <h1 className="text-xl leading-7 font-bold tracking-tight">{title}</h1>
+            <h1 className="text-xl leading-7 font-semibold tracking-[-0.02em]">{title}</h1>
             {description && <div className="mt-0.5 text-[13px] text-muted-foreground">{description}</div>}
           </div>
         </div>

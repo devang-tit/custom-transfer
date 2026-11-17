@@ -2,6 +2,9 @@ import { ChartColumn, House, Package, Percent, Settings, ShoppingCart, Store, Us
 
 export type NavCountKey = "orders" | "reviews" | "inbox";
 
+/** Cookie that remembers a collapsed sidebar (read on the server so there's no layout flash). */
+export const ADMIN_NAV_COOKIE = "admin_nav";
+
 export type AdminNavChild = { title: string; href: string; countKey?: NavCountKey };
 export type AdminNavItem = {
   title: string;

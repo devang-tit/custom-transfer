@@ -22,7 +22,7 @@ export function SegmentedLinks({
             scroll={false}
             aria-current={on ? "page" : undefined}
             className={cn(
-              "inline-flex h-7 shrink-0 items-center gap-1.5 rounded-lg px-3 text-[13px] font-[550] whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full px-3 text-xs font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
               on ? "bg-black/[0.08] text-foreground dark:bg-white/[0.12]" : "text-muted-foreground hover:bg-black/[0.05] hover:text-foreground dark:hover:bg-white/[0.06]"
             )}
           >
