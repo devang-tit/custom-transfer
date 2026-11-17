@@ -13,7 +13,7 @@
     "db:studio": "prisma studio",
     "setup": "prisma migrate deploy && prisma db seed",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma generate && prisma migrate deploy && tsx prisma/seed.ts --if-empty && next build",
+    "vercel-build": "prisma generate && prisma migrate deploy && tsx prisma/seed.ts --if-empty && tsx scripts/setup-stripe-webhook.ts && next build",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy"
   },

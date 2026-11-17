@@ -132,10 +132,15 @@ On a remote database, the demo staff and customer accounts get random passwords,
 **Never point your local `.env` at the live database.** `npm run db:reset` wipes whatever `DATABASE_URL` points to.
 
 ### Enable Stripe
-1. Set `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`.
-2. Point a Stripe webhook at `https://your-domain/api/stripe/webhook` for the `checkout.session.completed` event.
+Set `STRIPE_SECRET_KEY` (and the publishable keys). Without a key, checkout uses the demo payment form.
 
-Without a key, checkout uses the demo payment form.
+**Webhook (automatic):** each production deploy runs `scripts/setup-stripe-webhook.ts`. The script:
+- registers a Stripe webhook endpoint at `NEXT_PUBLIC_SITE_URL/api/stripe/webhook`
+- subscribes it to `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed` and `checkout.session.expired`
+- saves the signing secret in the database, never in logs
+- reuses the existing endpoint on later deploys
+
+If you change the domain, update `NEXT_PUBLIC_SITE_URL` and redeploy: the endpoint is replaced. **Admin → Settings → Payments** shows the status. To manage the endpoint yourself instead, set `STRIPE_WEBHOOK_SECRET` and the script steps aside.
 
 ### Email notifications
 Order emails are sent through any SMTP provider, for example Gmail, Amazon SES, Resend, Postmark or Mailgun. Set them up in `.env`:
@@ -216,4 +221,3 @@ All prices are integer cents. `src/lib/pricing.ts` is shared by the browser, for
 - **Email:** order and password emails are sent (see above). Contact-form auto-replies aren't built yet, and inbox replies open your mail app.
 - **Refunds:** refund and cancel in admin update the order only; they don't call Stripe.
 - **Gang sheet packing** uses bounding boxes (rectangles), not true shape nesting. PDF uploads can be ordered as files but not placed on the canvas.
-- **Stripe webhook:** add a webhook endpoint in Stripe for `https://<your-domain>/api/stripe/webhook` and set `STRIPE_WEBHOOK_SECRET`. Until then, orders are marked paid when the customer returns to the success page after paying, and a customer who closes the tab first leaves the order unpaid.

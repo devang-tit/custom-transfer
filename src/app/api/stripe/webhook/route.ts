@@ -2,12 +2,16 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { db } from "@/lib/db";
 import { getStripe, markOrderPaid, stripeEnabled } from "@/app/(store)/_actions/payment-lib";
+import { getStripeWebhookSecret } from "@/lib/stripe-webhook";
 
 export const dynamic = "force-dynamic";
 
-/** Stripe → POST checkout.session.* events. Configure STRIPE_WEBHOOK_SECRET. */
+/**
+ * Stripe → POST checkout.session.* events. The signing secret comes from STRIPE_WEBHOOK_SECRET
+ * or, by default, from the endpoint the production deploy registers (scripts/setup-stripe-webhook.ts).
+ */
 export async function POST(request: Request) {
-  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  const secret = await getStripeWebhookSecret();
   if (!stripeEnabled() || !secret) return NextResponse.json({ error: "Stripe webhook not configured" }, { status: 501 });
 
   const signature = request.headers.get("stripe-signature");

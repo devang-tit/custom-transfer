@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Loader2, Plus, Save, Trash2, Megaphone, Store, Receipt, Truck, Mail, Send, ServerCog } from "lucide-react";
+import { Loader2, Plus, Save, Trash2, Megaphone, Store, Receipt, Truck, Mail, Send, ServerCog, CreditCard, CircleCheck, CircleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,7 @@ import { Panel } from "@/components/admin/page-header";
 import { computeTotals } from "@/lib/pricing";
 import { formatMoney, slugify } from "@/lib/format";
 import type { StoreSettings } from "@/lib/types";
+import type { StripeStatus } from "@/lib/stripe-webhook";
 import { ORDER_STATUS_META, type OrderStatus } from "@/lib/order-status";
 import { cn } from "@/lib/utils";
 import { saveStoreSettings, sendTestEmailAction } from "./actions";
@@ -23,7 +24,7 @@ const EMAILABLE_STATUSES: OrderStatus[] = ["ARTWORK_REVIEW", "IN_PRODUCTION", "Q
 
 type EmailInfo = { mode: "smtp" | "outbox"; host?: string; from: string };
 
-export function SettingsForm({ initial, readOnly, email }: { initial: StoreSettings; readOnly: boolean; email: EmailInfo }) {
+export function SettingsForm({ initial, readOnly, email, stripe }: { initial: StoreSettings; readOnly: boolean; email: EmailInfo; stripe: StripeStatus }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [s, setS] = useState({
@@ -155,6 +156,29 @@ export function SettingsForm({ initial, readOnly, email }: { initial: StoreSetti
           </ul>
         </Panel>
 
+        <Panel title={<Title icon={CreditCard}>Payments</Title>} description="Stripe Checkout status. Keys are managed in your hosting environment variables.">
+          <div className="grid gap-3 text-sm sm:grid-cols-2">
+            <StatusRow
+              ok={stripe.enabled}
+              label={stripe.enabled ? `Stripe connected${stripe.mode !== "unknown" ? ` · ${stripe.mode} mode` : ""}` : "Demo card payments"}
+              hint={stripe.enabled ? "Customers pay on Stripe’s secure checkout page." : "Set STRIPE_SECRET_KEY to take real payments."}
+            />
+            {stripe.enabled && (
+              <StatusRow
+                ok={!!stripe.webhook}
+                label={stripe.webhook ? "Webhook connected" : "Webhook not connected"}
+                hint={
+                  stripe.webhook?.source === "env"
+                    ? "Using STRIPE_WEBHOOK_SECRET."
+                    : stripe.webhook
+                      ? `${stripe.webhook.url} · set up automatically on deploy`
+                      : "Deploy to production with NEXT_PUBLIC_SITE_URL set and it’s created automatically."
+                }
+              />
+            )}
+          </div>
+        </Panel>
+
         <Panel
           title={<Title icon={Mail}>Email notifications</Title>}
           description="Automatic emails for orders. Every email is recorded in the Email log."
@@ -271,6 +295,18 @@ export function SettingsForm({ initial, readOnly, email }: { initial: StoreSetti
         </div>
       )}
     </form>
+  );
+}
+
+function StatusRow({ ok, label, hint }: { ok: boolean; label: string; hint: string }) {
+  return (
+    <div className={cn("flex items-start gap-2.5 rounded-lg border p-3", ok ? "border-emerald-500/30 bg-emerald-500/5" : "border-amber-500/30 bg-amber-500/5")}>
+      {ok ? <CircleCheck className="mt-0.5 size-4 shrink-0 text-emerald-600" /> : <CircleAlert className="mt-0.5 size-4 shrink-0 text-amber-600" />}
+      <div className="min-w-0">
+        <p className="font-medium">{label}</p>
+        <p className="truncate text-xs text-muted-foreground" title={hint}>{hint}</p>
+      </div>
+    </div>
   );
 }
 
