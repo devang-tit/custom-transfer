@@ -1,0 +1,243 @@
+// InkForge — custom transfers & apparel printing store.
+// SQLite for local dev. To use Postgres/MySQL, change `provider` and DATABASE_URL.
+// JSON payloads are stored as String (parsed in src/lib/json.ts) so the schema works on every provider.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String         @id @default(cuid())
+  email          String         @unique
+  name           String
+  passwordHash   String
+  role           String         @default("CUSTOMER") // CUSTOMER | STAFF | ADMIN
+  phone          String?
+  company        String?
+  avatarUrl      String?
+  marketingOptIn Boolean        @default(false)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  addresses      Address[]
+  orders         Order[]
+  designs        SavedDesign[]
+  reviews        Review[]
+  wishlist       WishlistItem[]
+}
+
+model Address {
+  id        String  @id @default(cuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label     String  @default("Home")
+  name      String
+  company   String?
+  line1     String
+  line2     String?
+  city      String
+  state     String
+  zip       String
+  country   String  @default("US")
+  phone     String?
+  isDefault Boolean @default(false)
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  image       String?
+  sortOrder   Int       @default(0)
+  products    Product[]
+}
+
+model Product {
+  id               String         @id @default(cuid())
+  name             String
+  slug             String         @unique
+  sku              String?        @unique
+  type             String // DTF_TRANSFER | GANG_SHEET | UV_DTF | SCREEN_PRINT | APPAREL | SUPPLIES
+  categoryId       String?
+  category         Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  shortDescription String?
+  description      String?
+  images           String         @default("[]") // string[]
+  basePrice        Int // cents — "from" price; per-option pricing lives in options
+  compareAtPrice   Int?
+  options          String         @default("{}") // ProductOptions
+  tiers            String         @default("[]") // PriceTier[]
+  features         String         @default("[]") // string[] bullet highlights
+  badge            String? // "Best seller", "New", ...
+  turnaround       String? // "Ships same day"
+  stock            Int? // null = made to order
+  featured         Boolean        @default(false)
+  active           Boolean        @default(true)
+  sortOrder        Int            @default(0)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  reviews          Review[]
+  orderItems       OrderItem[]
+  wishlistedBy     WishlistItem[]
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  name      String
+  rating    Int
+  title     String?
+  body      String
+  status    String   @default("PENDING") // PENDING | APPROVED | REJECTED
+  createdAt DateTime @default(now())
+}
+
+model WishlistItem {
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([userId, productId])
+}
+
+model SavedDesign {
+  id         String   @id @default(cuid())
+  userId     String? // null = guest design (still referenced by cart/order lines)
+  user       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  kind       String // GANG_SHEET | APPAREL
+  data       String // editor JSON
+  previewUrl String?
+  widthIn    Float?
+  heightIn   Float?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  number          String      @unique // e.g. IF-10482
+  userId          String?
+  user            User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  email           String
+  customerName    String
+  phone           String?
+  status          String      @default("PENDING") // see src/lib/order-status.ts
+  paymentStatus   String      @default("UNPAID") // UNPAID | PAID | REFUNDED | FAILED
+  paymentMethod   String? // card | stripe | paypal | invoice
+  paymentRef      String?
+  shippingMethod  String      @default("standard")
+  shippingAddress String      @default("{}") // AddressInput JSON
+  subtotal        Int
+  discount        Int         @default(0)
+  shipping        Int         @default(0)
+  rushFee         Int         @default(0)
+  tax             Int         @default(0)
+  total           Int
+  couponCode      String?
+  isRush          Boolean     @default(false)
+  notes           String?
+  internalNotes   String?
+  carrier         String?
+  trackingNumber  String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  items           OrderItem[]
+  events          OrderEvent[]
+  emails          EmailLog[]
+}
+
+model OrderItem {
+  id            String   @id @default(cuid())
+  orderId       String
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId     String?
+  product       Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  name          String
+  type          String
+  image         String?
+  variantLabel  String?
+  selection     String   @default("{}") // LineSelection JSON
+  quantity      Int
+  unitPrice     Int
+  total         Int
+  artworkUrl    String?
+  designId      String?
+  artworkStatus String   @default("PENDING") // PENDING | APPROVED | NEEDS_CHANGES
+  artworkNote   String?
+}
+
+model OrderEvent {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    String?
+  message   String
+  author    String   @default("system")
+  visible   Boolean  @default(true) // visible to customer
+  createdAt DateTime @default(now())
+}
+
+model Coupon {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  description String?
+  type        String // PERCENT | FIXED | FREE_SHIPPING
+  value       Int // percent (0-100) or cents
+  minSubtotal Int       @default(0)
+  maxUses     Int?
+  usedCount   Int       @default(0)
+  startsAt    DateTime?
+  expiresAt   DateTime?
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+}
+
+model Setting {
+  key   String @id
+  value String // JSON
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  status    String   @default("NEW") // NEW | READ | REPLIED
+  createdAt DateTime @default(now())
+}
+
+/// Every notification email we attempt, for auditing and the admin email log.
+model EmailLog {
+  id        String   @id @default(cuid())
+  orderId   String?
+  order     Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  to        String
+  subject   String
+  template  String // order_confirmation | order_status | artwork_changes | order_update | admin_new_order | test
+  status    String // SENT | OUTBOX | FAILED
+  error     String?
+  messageId String?
+  html      String
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([createdAt])
+}

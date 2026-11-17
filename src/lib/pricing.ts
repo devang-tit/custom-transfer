@@ -1,0 +1,192 @@
+/**
+ * Pricing engine shared by client (live price previews) and server (authoritative
+ * recalculation at checkout). Pure functions only — no DB, no React.
+ * All amounts are integer cents.
+ */
+import type {
+  CouponLike,
+  LineSelection,
+  PriceTier,
+  PricingProduct,
+  ShippingMethod,
+  StoreSettings,
+} from "@/lib/types";
+
+export const DEFAULT_TIERS: PriceTier[] = [
+  { minQty: 1, discountPct: 0 },
+  { minQty: 10, discountPct: 10 },
+  { minQty: 25, discountPct: 20 },
+  { minQty: 50, discountPct: 30 },
+  { minQty: 100, discountPct: 40 },
+];
+
+export function tierDiscountPct(tiers: PriceTier[], qty: number): number {
+  const list = tiers.length ? tiers : DEFAULT_TIERS;
+  let pct = 0;
+  for (const t of [...list].sort((a, b) => a.minQty - b.minQty)) {
+    if (qty >= t.minQty) pct = t.discountPct;
+  }
+  return pct;
+}
+
+/** Next tier the customer could unlock (for "Add 5 more to save 20%" nudges). */
+export function nextTier(tiers: PriceTier[], qty: number): PriceTier | null {
+  const list = (tiers.length ? tiers : DEFAULT_TIERS).slice().sort((a, b) => a.minQty - b.minQty);
+  return list.find((t) => t.minQty > qty) ?? null;
+}
+
+export type LinePrice = {
+  /** Effective per-unit price after tier discount (rounded) */
+  unitPrice: number;
+  /** Per-unit price before tier discount */
+  baseUnitPrice: number;
+  discountPct: number;
+  quantity: number;
+  total: number;
+  /** Human label for the chosen variant */
+  variantLabel: string;
+};
+
+export function priceLine(product: PricingProduct, sel: LineSelection): LinePrice {
+  const opts = product.options ?? {};
+  const isApparel = product.type === "APPAREL";
+
+  if (isApparel) {
+    const sizeQty = sel.apparelSizes ?? {};
+    const quantity = Object.values(sizeQty).reduce((a, b) => a + (b > 0 ? b : 0), 0) || sel.quantity || 0;
+    const locations = (opts.printLocations ?? []).filter((l) => sel.printLocations?.includes(l.id));
+    const printCost = locations.reduce((s, l) => s + l.price, 0);
+    const baseUnit = product.basePrice + printCost;
+    const discountPct = tierDiscountPct(product.tiers, quantity);
+    // Size upcharges are added per garment, then tier discount applied to the whole line.
+    let gross = 0;
+    const entries = Object.entries(sizeQty).filter(([, q]) => q > 0);
+    if (entries.length) {
+      for (const [size, q] of entries) {
+        const up = opts.apparelSizes?.find((s) => s.size === size)?.upcharge ?? 0;
+        gross += (baseUnit + up) * q;
+      }
+    } else {
+      gross = baseUnit * quantity;
+    }
+    const total = Math.round(gross * (1 - discountPct / 100));
+    const unitPrice = quantity ? Math.round(total / quantity) : 0;
+    const colorLabel = sel.color ? `${sel.color}` : "";
+    const locLabel = locations.map((l) => l.label).join(" + ");
+    return {
+      unitPrice,
+      baseUnitPrice: baseUnit,
+      discountPct,
+      quantity,
+      total,
+      variantLabel: [colorLabel, locLabel].filter(Boolean).join(" · ") || "Custom apparel",
+    };
+  }
+
+  const size = opts.sizes?.find((s) => s.id === sel.sizeId) ?? opts.sizes?.[0];
+  const finish = opts.finishes?.find((f) => f.id === sel.finishId);
+  const baseUnit = (size?.price ?? product.basePrice) + (finish?.price ?? 0);
+  const quantity = Math.max(0, Math.floor(sel.quantity || 0));
+  const discountPct = tierDiscountPct(product.tiers, quantity);
+  const unitPrice = Math.round(baseUnit * (1 - discountPct / 100));
+  return {
+    unitPrice,
+    baseUnitPrice: baseUnit,
+    discountPct,
+    quantity,
+    total: unitPrice * quantity,
+    variantLabel: [size?.label, finish && finish.id !== "standard" ? finish.label : null].filter(Boolean).join(" · "),
+  };
+}
+
+export const DEFAULT_SETTINGS: StoreSettings = {
+  storeName: "InkForge",
+  supportEmail: "hello@inkforge.example",
+  supportPhone: "+1 (555) 014-2290",
+  taxRate: 8.25,
+  freeShippingThreshold: 7500,
+  rushFeePct: 25,
+  orderPrefix: "IF",
+  notifications: {
+    customerOrderConfirmation: true,
+    customerStatusUpdates: true,
+    statusEmailFor: ["IN_PRODUCTION", "READY", "SHIPPED", "DELIVERED", "CANCELLED", "REFUNDED"],
+    customerArtworkChanges: true,
+    customerOrderUpdates: true,
+    adminNewOrder: true,
+    adminEmail: "",
+  },
+  announcement: "Free shipping on orders over $75 · Same-day production on orders placed before 2pm CT",
+  announcementEnabled: true,
+  shippingMethods: [
+    { id: "standard", label: "Standard", description: "3–5 business days", price: 599, freeEligible: true },
+    { id: "express", label: "Express", description: "2 business days", price: 1499 },
+    { id: "overnight", label: "Overnight", description: "Next business day", price: 2999 },
+    { id: "pickup", label: "Local pickup", description: "Austin, TX studio — ready same day", price: 0 },
+  ],
+};
+
+export type CartTotals = {
+  subtotal: number;
+  discount: number;
+  shipping: number;
+  rushFee: number;
+  tax: number;
+  total: number;
+  freeShippingApplied: boolean;
+  /** Cents remaining until free shipping (0 if reached) */
+  freeShippingRemaining: number;
+  couponError?: string;
+};
+
+export function couponDiscount(coupon: CouponLike | null | undefined, subtotal: number): { discount: number; freeShipping: boolean; error?: string } {
+  if (!coupon) return { discount: 0, freeShipping: false };
+  if (subtotal < coupon.minSubtotal) {
+    return { discount: 0, freeShipping: false, error: `Minimum order of $${(coupon.minSubtotal / 100).toFixed(2)} required` };
+  }
+  if (coupon.type === "PERCENT") return { discount: Math.round((subtotal * Math.min(coupon.value, 100)) / 100), freeShipping: false };
+  if (coupon.type === "FIXED") return { discount: Math.min(coupon.value, subtotal), freeShipping: false };
+  if (coupon.type === "FREE_SHIPPING") return { discount: 0, freeShipping: true };
+  return { discount: 0, freeShipping: false };
+}
+
+export function computeTotals(input: {
+  subtotal: number;
+  settings: StoreSettings;
+  shippingMethodId?: string;
+  coupon?: CouponLike | null;
+  rush?: boolean;
+}): CartTotals {
+  const { subtotal, settings } = input;
+  const method: ShippingMethod | undefined =
+    settings.shippingMethods.find((m) => m.id === input.shippingMethodId) ?? settings.shippingMethods[0];
+  const c = couponDiscount(input.coupon, subtotal);
+  const discounted = Math.max(0, subtotal - c.discount);
+  const freeByThreshold = !!method?.freeEligible && discounted >= settings.freeShippingThreshold;
+  const freeShippingApplied = (c.freeShipping && !!method?.freeEligible) || freeByThreshold;
+  const shipping = subtotal === 0 ? 0 : freeShippingApplied ? 0 : (method?.price ?? 0);
+  const rushFee = input.rush ? Math.round((discounted * settings.rushFeePct) / 100) : 0;
+  const tax = Math.round(((discounted + rushFee) * settings.taxRate) / 100);
+  return {
+    subtotal,
+    discount: c.discount,
+    shipping,
+    rushFee,
+    tax,
+    total: discounted + shipping + rushFee + tax,
+    freeShippingApplied,
+    freeShippingRemaining: Math.max(0, settings.freeShippingThreshold - discounted),
+    couponError: c.error,
+  };
+}
+
+/** Gang sheet helpers — standard roll width is 22". */
+export const GANG_SHEET_WIDTH = 22;
+/** Minimum recommended print resolution */
+export const MIN_DPI = 150;
+export const IDEAL_DPI = 300;
+
+export function effectiveDpi(naturalPx: number, printInches: number): number {
+  if (!printInches) return 0;
+  return Math.round(naturalPx / printInches);
+}

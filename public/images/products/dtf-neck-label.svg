@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <defs>
+    <radialGradient id="bg-e" cx="30%" cy="20%" r="90%">
+      <stop offset="0" stop-color="#F3EFFF"/><stop offset="1" stop-color="#DCD3FA"/>
+    </radialGradient>
+    <filter id="sh-e" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="22" stdDeviation="22" flood-color="#1b1530" flood-opacity="0.22"/>
+    </filter>
+    <linearGradient id="fold-e" x1="0" x2="1">
+      <stop offset="0" stop-color="#000" stop-opacity="0.10"/>
+      <stop offset="0.25" stop-color="#fff" stop-opacity="0.08"/>
+      <stop offset="0.6" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.14"/>
+    </linearGradient>
+    <linearGradient id="sun-e" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFD23F"/><stop offset="0.5" stop-color="#FF6B3D"/><stop offset="1" stop-color="#E9327A"/>
+    </linearGradient>
+    <linearGradient id="film-e" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/><stop offset="0.55" stop-color="#f3f4f8"/><stop offset="1" stop-color="#e6e8f0"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="800" fill="url(#bg-e)"/>
+  <circle cx="660" cy="130" r="160" fill="#fff" opacity="0.18"/>
+  <circle cx="120" cy="700" r="200" fill="#fff" opacity="0.12"/>
+    <g transform="rotate(-7 400 400)" filter="url(#sh-e)">
+      <rect x="170" y="170" width="460" height="460" rx="18" fill="url(#film-e)"/>
+      
+      <g transform="translate(300 300) rotate(0) scale(0.82) translate(-100 -100)">
+    <circle cx="100" cy="100" r="88" fill="#1d1830"/>
+    <circle cx="100" cy="100" r="74" fill="none" stroke="#3EC6E0" stroke-width="5" stroke-dasharray="6 7"/>
+    <path d="M100 48 L113 86 L153 86 L121 109 L133 148 L100 124 L67 148 L79 109 L47 86 L87 86 Z" fill="#FFD23F"/>
+    <text x="100" y="178" text-anchor="middle" font-family="'Arial Black','Helvetica Neue',Arial,sans-serif" font-weight="900" font-size="16" fill="#fff" letter-spacing="3">EST 2026</text></g><g transform="translate(500 300) rotate(0) scale(0.82) translate(-100 -100)">
+    <circle cx="100" cy="100" r="88" fill="#1d1830"/>
+    <circle cx="100" cy="100" r="74" fill="none" stroke="#3EC6E0" stroke-width="5" stroke-dasharray="6 7"/>
+    <path d="M100 48 L113 86 L153 86 L121 109 L133 148 L100 124 L67 148 L79 109 L47 86 L87 86 Z" fill="#FFD23F"/>
+    <text x="100" y="178" text-anchor="middle" font-family="'Arial Black','Helvetica Neue',Arial,sans-serif" font-weight="900" font-size="16" fill="#fff" letter-spacing="3">EST 2026</text></g><g transform="translate(300 500) rotate(0) scale(0.82) translate(-100 -100)">
+    <circle cx="100" cy="100" r="88" fill="#1d1830"/>
+    <circle cx="100" cy="100" r="74" fill="none" stroke="#3EC6E0" stroke-width="5" stroke-dasharray="6 7"/>
+    <path d="M100 48 L113 86 L153 86 L121 109 L133 148 L100 124 L67 148 L79 109 L47 86 L87 86 Z" fill="#FFD23F"/>
+    <text x="100" y="178" text-anchor="middle" font-family="'Arial Black','Helvetica Neue',Arial,sans-serif" font-weight="900" font-size="16" fill="#fff" letter-spacing="3">EST 2026</text></g><g transform="translate(500 500) rotate(0) scale(0.82) translate(-100 -100)">
+    <circle cx="100" cy="100" r="88" fill="#1d1830"/>
+    <circle cx="100" cy="100" r="74" fill="none" stroke="#3EC6E0" stroke-width="5" stroke-dasharray="6 7"/>
+    <path d="M100 48 L113 86 L153 86 L121 109 L133 148 L100 124 L67 148 L79 109 L47 86 L87 86 Z" fill="#FFD23F"/>
+    <text x="100" y="178" text-anchor="middle" font-family="'Arial Black','Helvetica Neue',Arial,sans-serif" font-weight="900" font-size="16" fill="#fff" letter-spacing="3">EST 2026</text></g>
+      <path d="M630 560 L630 612 Q630 630 612 630 L560 630 Z" fill="#d6d9e4"/>
+      <path d="M560 630 L630 560 L600 600 Z" fill="#fff" opacity="0.9"/>
+      <rect x="170" y="170" width="460" height="460" rx="18" fill="none" stroke="#fff" stroke-opacity="0.9" stroke-width="3"/>
+    </g></svg>

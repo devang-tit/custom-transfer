@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <defs>
+    <radialGradient id="bg-t" cx="30%" cy="20%" r="90%">
+      <stop offset="0" stop-color="#F6F2EA"/><stop offset="1" stop-color="#E3DACB"/>
+    </radialGradient>
+    <filter id="sh-t" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="22" stdDeviation="22" flood-color="#1b1530" flood-opacity="0.22"/>
+    </filter>
+    <linearGradient id="fold-t" x1="0" x2="1">
+      <stop offset="0" stop-color="#000" stop-opacity="0.10"/>
+      <stop offset="0.25" stop-color="#fff" stop-opacity="0.08"/>
+      <stop offset="0.6" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.14"/>
+    </linearGradient>
+    <linearGradient id="sun-t" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFD23F"/><stop offset="0.5" stop-color="#FF6B3D"/><stop offset="1" stop-color="#E9327A"/>
+    </linearGradient>
+    <linearGradient id="film-t" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/><stop offset="0.55" stop-color="#f3f4f8"/><stop offset="1" stop-color="#e6e8f0"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="800" fill="url(#bg-t)"/>
+  <circle cx="660" cy="130" r="160" fill="#fff" opacity="0.18"/>
+  <circle cx="120" cy="700" r="200" fill="#fff" opacity="0.12"/><g filter="url(#sh-t)">
+      <circle cx="400" cy="400" r="210" fill="#D9A441"/>
+      <circle cx="400" cy="400" r="210" fill="none" stroke="#b5832a" stroke-width="6"/>
+      <circle cx="400" cy="400" r="170" fill="none" stroke="#000" stroke-opacity="0.08" stroke-width="3"/><circle cx="400" cy="400" r="140" fill="none" stroke="#000" stroke-opacity="0.08" stroke-width="3"/><circle cx="400" cy="400" r="112" fill="none" stroke="#000" stroke-opacity="0.08" stroke-width="3"/>
+      <circle cx="400" cy="400" r="92" fill="#f4efe6"/><circle cx="400" cy="400" r="70" fill="url(#bg-t)"/>
+      <path d="M596 470 L700 520 L688 560 L580 520 Z" fill="#D9A441" opacity="0.9"/></g></svg>

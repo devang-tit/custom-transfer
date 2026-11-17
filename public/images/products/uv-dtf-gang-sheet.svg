@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <defs>
+    <radialGradient id="bg-h" cx="30%" cy="20%" r="90%">
+      <stop offset="0" stop-color="#FFF4E8"/><stop offset="1" stop-color="#FBD9B5"/>
+    </radialGradient>
+    <filter id="sh-h" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="22" stdDeviation="22" flood-color="#1b1530" flood-opacity="0.22"/>
+    </filter>
+    <linearGradient id="fold-h" x1="0" x2="1">
+      <stop offset="0" stop-color="#000" stop-opacity="0.10"/>
+      <stop offset="0.25" stop-color="#fff" stop-opacity="0.08"/>
+      <stop offset="0.6" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.14"/>
+    </linearGradient>
+    <linearGradient id="sun-h" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFD23F"/><stop offset="0.5" stop-color="#FF6B3D"/><stop offset="1" stop-color="#E9327A"/>
+    </linearGradient>
+    <linearGradient id="film-h" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/><stop offset="0.55" stop-color="#f3f4f8"/><stop offset="1" stop-color="#e6e8f0"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="800" fill="url(#bg-h)"/>
+  <circle cx="660" cy="130" r="160" fill="#fff" opacity="0.18"/>
+  <circle cx="120" cy="700" r="200" fill="#fff" opacity="0.12"/>
+    <g filter="url(#sh-h)">
+      <rect x="250" y="70" width="300" height="640" rx="12" fill="url(#film-h)"/>
+      <g transform="translate(312 128) rotate(-4) scale(0.38) translate(-100 -100)">
+    <linearGradient id="sg-h0sunset312128" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFD23F"/><stop offset="0.5" stop-color="#FF6B3D"/><stop offset="1" stop-color="#E9327A"/></linearGradient>
+    <clipPath id="sc-h0sunset312128"><circle cx="100" cy="92" r="72"/></clipPath>
+    <g clip-path="url(#sc-h0sunset312128)">
+      <rect x="20" y="15" width="160" height="160" fill="url(#sg-h0sunset312128)"/>
+      <rect x="20" y="108" width="160" height="4" fill="#fff" fill-opacity="0.95"/><rect x="20" y="122" width="160" height="6" fill="#fff" fill-opacity="0.95"/><rect x="20" y="136" width="160" height="8" fill="#fff" fill-opacity="0.95"/><rect x="20" y="150" width="160" height="10" fill="#fff" fill-opacity="0.95"/>
+    </g>
+    <text x="100" y="192" text-anchor="middle" font-family="'Arial Black','Helvetica Neue',Arial,sans-serif" font-weight="900" font-size="28" fill="#2b2140" letter-spacing="2">GOLDEN HR</text></g><g transform="translate(400 128) rotate(0) scale(0.38) translate(-100 -100)">
+    <path d="M118 8 L52 112 L96 112 L80 192 L150 78 L104 78 Z" fill="#FFD23F" stroke="#1d1830" stroke-width="8" stroke-linejoin="round"/></g><g transform="translate(488 128) rotate(4) scale(0.38) translate(-100 -100)">
+    <g transform="translate(100 100)">
+      <ellipse cx="0" cy="-50" rx="30" ry="46" fill="#FF7AB6" stroke="#1d1830" stroke-width="6" transform="rotate(0)"/><ellipse cx="0" cy="-50" rx="30" ry="46" fill="#FF7AB6" stroke="#1d1830" stroke-width="6" transform="rotate(60)"/><ellipse cx="0" cy="-50" rx="30" ry="46" fill="#FF7AB6" stroke="#1d1830" stroke-width="6" transform="rotate(120)"/><ellipse cx="0" cy="-50" rx="30" ry="46" fill="#FF7AB6" stroke="#1d1830" stroke-width="6" transform="rotate(180)"/><ellipse cx="0" cy="-50" rx="30" ry="46" fill="#FF7AB6" stroke="#1d1830" stroke-width="6" transform="rotate(240)"/><ellipse cx="0" cy="-50" rx="30" ry="46" fill="#FF7AB6" stroke="#1d1830" stroke-width="6" transform="rotate(300)"/>
+      <circle r="34" fill="#FFD23F" stroke="#1d1830" stroke-width="6"/>
+      <circle cx="-11" cy="-6" r="4.5" fill="#1d1830"/><circle cx="11" cy="-6" r="4.5" fill="#1d1830"/>
+      <path d="M-13 9 Q0 21 13 9" stroke="#1d1830" stroke-width="5" fill="none" stroke-linecap="round"/>
+    </g></g><g transform="translate(312 224) rotate(-4) scale(0.38) translate(-100 -100)">
+    <text x="100" y="88" text-anchor="middle" font-family="'Arial Black','Helvetica Neue',Arial,sans-serif" font-weight="900" font-size="54" fill="#6C4CF5" stroke="#1d1830" stroke-width="4" paint-order="stroke">GOOD</text>
+    <text x="100" y="148" text-anchor="middle" font-family="'Arial Black','Helvetica Neue',Arial,sans-serif" font-weight="900" font-size="54" fill="#FF4F8B" stroke="#1d1830" stroke-width="4" paint-order="stroke">VIBES</text>
+    <text x="100" y="184" text-anchor="middle" font-family="'Arial Black','Helvetica Neue',Arial,sans-serif" font-weight="900" font-size="20" fill="#1d1830" letter-spacing="6">ONLY</text></g><g transform="translate(400 224) rotate(0) scale(0.38) translate(-100 -100)">
+    <circle cx="100" cy="100" r="88" fill="#1d1830"/>
+    <circle cx="100" cy="100" r="74" fill="none" stroke="#3EC6E0" stroke-width="5" stroke-dasharray="6 7"/>
+    <path d="M100 48 L113 86 L153 86 L121 109 L133 148 L100 124 L67 148 L79 109 L47 86 L87 86 Z" fill="#FFD23F"/>
+    <text x="100" y="178" text-anchor="middle" font-family="'Arial Black','Helvetica Neue',Arial,sans-serif" font-weight="900" font-size="16" fill="#fff" letter-spacing="3">EST 2026</text></g><g transform="translate(488 224) rotate(4) scale(0.38) translate(-100 -100)">
+    <rect x="12" y="40" width="176" height="120" rx="60" fill="#3EC6E0" stroke="#1d1830" stroke-width="7"/>
+    <path d="M24 112 Q52 82 80 112 T136 112 T188 112 L188 150 Q100 175 24 150 Z" fill="#1F6FEB"/>
+    <circle cx="140" cy="76" r="17" fill="#FFD23F"/></g><g transform="translate(312 320) rotate(-4) scale(0.38) translate(-100 -100)">
+    <path d="M100 176 C40 132 14 104 14 70 C14 40 38 20 64 20 C82 20 94 30 100 44 C106 30 118 20 136 20 C162 20 186 40 186 70 C186 104 160 132 100 176 Z" fill="#E9327A" stroke="#1d1830" stroke-width="7"/>
+    <path d="M52 62 Q60 44 78 44" stroke="#fff" stroke-width="8" fill="none" stroke-linecap="round" opacity="0.8"/></g><g transform="translate(400 320) rotate(0) scale(0.38) translate(-100 -100)">
+    <circle cx="100" cy="100" r="86" fill="#F4EFE6" stroke="#1d1830" stroke-width="7"/>
+    <path d="M24 148 L76 72 L104 112 L128 84 L178 148 Z" fill="#24483A"/>
+    <path d="M76 72 L88 90 L64 90 Z" fill="#fff"/>
+    <circle cx="140" cy="58" r="14" fill="#FF6B3D"/></g><g transform="translate(488 320) rotate(4) scale(0.38) translate(-100 -100)">
+    <linearGradient id="sg-h8sunset488320" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFD23F"/><stop offset="0.5" stop-color="#FF6B3D"/><stop offset="1" stop-color="#E9327A"/></linearGradient>
+    <clipPath id="sc-h8sunset488320"><circle cx="100" cy="92" r="72"/></clipPath>
+    <g clip-path="url(#sc-h8sunset488320)">
+      <rect x="20" y="15" width="160" height="160" fill="url(#sg-h8sunset488320)"/>
+      <rect x="20" y="108" width="160" height="4" fill="#fff" fill-opacity="0.95"/><rect x="20" y="122" width="160" height="6" fill="#fff" fill-opacity="0.95"/><rect x="20" y="136" width="160" height="8" fill="#fff" fill-opacity="0.95"/><rect x="20" y="150" width="160" height="10" fill="#fff" fill-opacity="0.95"/>
+    </g>
+    <text x="100" y="192" text-anchor="middle" font-family="'Arial Black','Helvetica Neue',Arial,sans-serif" font-weight="900" font-size="28" fill="#2b2140" letter-spacing="2">GOLDEN HR</text></g><g transform="translate(312 416) rotate(-4) scale(0.38) translate(-100 -100)">
+    <path d="M118 8 L52 112 L96 112 L80 192 L150 78 L104 78 Z" fill="#FFD23F" stroke="#1d1830" stroke-width="8" stroke-linejoin="round"/></g><g transform="translate(400 416) rotate(0) scale(0.38) translate(-100 -100)">
+    <g transform="translate(100 100)">
+      <ellipse cx="0" cy="-50" rx="30" ry="46" fill="#FF7AB6" stroke="#1d1830" stroke-width="6" transform="rotate(0)"/><ellipse cx="0" cy="-50" rx="30" ry="46" fill="#FF7AB6" stroke="#1d1830" stroke-width="6" transform="rotate(60)"/><ellipse cx="0" cy="-50" rx="30" ry="46" fill="#FF7AB6" stroke="#1d1830" stroke-width="6" transform="rotate(120)"/><ellipse cx="0" cy="-50" rx="30" ry="46" fill="#FF7AB6" stroke="#1d1830" stroke-width="6" transform="rotate(180)"/><ellipse cx="0" cy="-50" rx="30" ry="46" fill="#FF7AB6" stroke="#1d1830" stroke-width="6" transform="rotate(240)"/><ellipse cx="0" cy="-50" rx="30" ry="46" fill="#FF7AB6" stroke="#1d1830" stroke-width="6" transform="rotate(300)"/>
+      <circle r="34" fill="#FFD23F" stroke="#1d1830" stroke-width="6"/>
+      <circle cx="-11" cy="-6" r="4.5" fill="#1d1830"/><circle cx="11" cy="-6" r="4.5" fill="#1d1830"/>
+      <path d="M-13 9 Q0 21 13 9" stroke="#1d1830" stroke-width="5" fill="none" stroke-linecap="round"/>
+    </g></g><g transform="translate(488 416) rotate(4) scale(0.38) translate(-100 -100)">
+    <text x="100" y="88" text-anchor="middle" font-family="'Arial Black','Helvetica Neue',Arial,sans-serif" font-weight="900" font-size="54" fill="#6C4CF5" stroke="#1d1830" stroke-width="4" paint-order="stroke">GOOD</text>
+    <text x="100" y="148" text-anchor="middle" font-family="'Arial Black','Helvetica Neue',Arial,sans-serif" font-weight="900" font-size="54" fill="#FF4F8B" stroke="#1d1830" stroke-width="4" paint-order="stroke">VIBES</text>
+    <text x="100" y="184" text-anchor="middle" font-family="'Arial Black','Helvetica Neue',Arial,sans-serif" font-weight="900" font-size="20" fill="#1d1830" letter-spacing="6">ONLY</text></g><g transform="translate(312 512) rotate(-4) scale(0.38) translate(-100 -100)">
+    <circle cx="100" cy="100" r="88" fill="#1d1830"/>
+    <circle cx="100" cy="100" r="74" fill="none" stroke="#3EC6E0" stroke-width="5" stroke-dasharray="6 7"/>
+    <path d="M100 48 L113 86 L153 86 L121 109 L133 148 L100 124 L67 148 L79 109 L47 86 L87 86 Z" fill="#FFD23F"/>
+    <text x="100" y="178" text-anchor="middle" font-family="'Arial Black','Helvetica Neue',Arial,sans-serif" font-weight="900" font-size="16" fill="#fff" letter-spacing="3">EST 2026</text></g><g transform="translate(400 512) rotate(0) scale(0.38) translate(-100 -100)">
+    <rect x="12" y="40" width="176" height="120" rx="60" fill="#3EC6E0" stroke="#1d1830" stroke-width="7"/>
+    <path d="M24 112 Q52 82 80 112 T136 112 T188 112 L188 150 Q100 175 24 150 Z" fill="#1F6FEB"/>
+    <circle cx="140" cy="76" r="17" fill="#FFD23F"/></g><g transform="translate(488 512) rotate(4) scale(0.38) translate(-100 -100)">
+    <path d="M100 176 C40 132 14 104 14 70 C14 40 38 20 64 20 C82 20 94 30 100 44 C106 30 118 20 136 20 C162 20 186 40 186 70 C186 104 160 132 100 176 Z" fill="#E9327A" stroke="#1d1830" stroke-width="7"/>
+    <path d="M52 62 Q60 44 78 44" stroke="#fff" stroke-width="8" fill="none" stroke-linecap="round" opacity="0.8"/></g><g transform="translate(312 608) rotate(-4) scale(0.38) translate(-100 -100)">
+    <circle cx="100" cy="100" r="86" fill="#F4EFE6" stroke="#1d1830" stroke-width="7"/>
+    <path d="M24 148 L76 72 L104 112 L128 84 L178 148 Z" fill="#24483A"/>
+    <path d="M76 72 L88 90 L64 90 Z" fill="#fff"/>
+    <circle cx="140" cy="58" r="14" fill="#FF6B3D"/></g><g transform="translate(400 608) rotate(0) scale(0.38) translate(-100 -100)">
+    <linearGradient id="sg-h16sunset400608" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFD23F"/><stop offset="0.5" stop-color="#FF6B3D"/><stop offset="1" stop-color="#E9327A"/></linearGradient>
+    <clipPath id="sc-h16sunset400608"><circle cx="100" cy="92" r="72"/></clipPath>
+    <g clip-path="url(#sc-h16sunset400608)">
+      <rect x="20" y="15" width="160" height="160" fill="url(#sg-h16sunset400608)"/>
+      <rect x="20" y="108" width="160" height="4" fill="#fff" fill-opacity="0.95"/><rect x="20" y="122" width="160" height="6" fill="#fff" fill-opacity="0.95"/><rect x="20" y="136" width="160" height="8" fill="#fff" fill-opacity="0.95"/><rect x="20" y="150" width="160" height="10" fill="#fff" fill-opacity="0.95"/>
+    </g>
+    <text x="100" y="192" text-anchor="middle" font-family="'Arial Black','Helvetica Neue',Arial,sans-serif" font-weight="900" font-size="28" fill="#2b2140" letter-spacing="2">GOLDEN HR</text></g><g transform="translate(488 608) rotate(4) scale(0.38) translate(-100 -100)">
+    <path d="M118 8 L52 112 L96 112 L80 192 L150 78 L104 78 Z" fill="#FFD23F" stroke="#1d1830" stroke-width="8" stroke-linejoin="round"/></g>
+      <rect x="250" y="70" width="300" height="640" rx="12" fill="none" stroke="#c9cede" stroke-width="2" stroke-dasharray="8 8"/>
+    </g>
+    <g font-family="'Arial Black','Helvetica Neue',Arial,sans-serif" font-weight="900" font-size="20" fill="#1d1830" opacity="0.75">
+      <line x1="250" y1="738" x2="550" y2="738" stroke="#1d1830" stroke-width="3"/>
+      <line x1="250" y1="728" x2="250" y2="748" stroke="#1d1830" stroke-width="3"/><line x1="550" y1="728" x2="550" y2="748" stroke="#1d1830" stroke-width="3"/>
+      <text x="400" y="776" text-anchor="middle" font-family="Arial" font-weight="700">UV DTF · 22 in wide</text>
+    </g></svg>
