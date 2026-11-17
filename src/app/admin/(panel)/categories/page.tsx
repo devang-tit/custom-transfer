@@ -29,7 +29,7 @@ export default async function CategoriesPage() {
             const rev = c.products.reduce((s, p) => s + (revMap.get(p.id) ?? 0), 0);
             const live = c.products.filter((p) => p.active).length;
             return (
-              <article key={c.id} className="group overflow-hidden rounded-xl border bg-card shadow-xs transition-shadow hover:shadow-md">
+              <article key={c.id} data-admin-card className="group overflow-hidden rounded-xl bg-card transition-shadow hover:shadow-md">
                 <div className="relative aspect-[16/7] overflow-hidden bg-muted">
                   {c.image && (
                     // eslint-disable-next-line @next/next/no-img-element

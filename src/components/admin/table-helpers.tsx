@@ -49,7 +49,7 @@ export function PaginationBar({
   const from = total ? (page - 1) * pageSize + 1 : 0;
   const to = Math.min(total, page * pageSize);
   const link = (p: number) => withParams(base, params, { page: p > 1 ? String(p) : undefined });
-  const btn = "inline-flex h-8 items-center gap-1 rounded-lg border bg-background px-2.5 text-sm font-medium transition-colors hover:bg-muted";
+  const btn = "inline-flex h-7 items-center gap-1 rounded-lg bg-card px-2.5 text-[13px] font-[550] shadow-[var(--admin-bevel)] transition-colors hover:bg-muted";
   return (
     <div className="flex flex-col items-center justify-between gap-3 border-t px-4 py-3 text-sm text-muted-foreground sm:flex-row">
       <p className="tabular-nums">

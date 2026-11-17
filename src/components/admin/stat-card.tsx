@@ -33,8 +33,8 @@ export function Delta({ value, className, invert = false }: { value: number | nu
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-xs font-semibold tabular-nums",
-        good ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" : "bg-rose-500/10 text-rose-700 dark:text-rose-400",
+        "inline-flex items-center gap-0.5 text-xs font-semibold tabular-nums",
+        good ? "text-[#0c7a43] dark:text-emerald-400" : "text-[#c70a24] dark:text-rose-400",
         className
       )}
     >
@@ -62,17 +62,15 @@ export function StatCard({
   color?: string;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-xl border bg-card p-5 shadow-xs">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-muted-foreground">{label}</p>
-        <span className="grid size-8 place-items-center rounded-lg bg-muted text-muted-foreground">
-          <Icon className="size-4" />
-        </span>
-      </div>
-      <div className="mt-3 flex items-end justify-between gap-3">
+    <div data-admin-card className="relative overflow-hidden rounded-xl bg-card p-4">
+      <p className="flex items-center justify-between gap-2 text-[13px] font-semibold">
+        <span className="border-b border-dashed border-muted-foreground/50 pb-px">{label}</span>
+        <Icon className="size-3.5 text-muted-foreground/70" aria-hidden />
+      </p>
+      <div className="mt-2 flex items-end justify-between gap-3">
         <div className="min-w-0">
-          <p className="font-heading text-[1.75rem] leading-none font-semibold tracking-tight tabular-nums">{value}</p>
-          <div className="mt-2.5 flex items-center gap-2">
+          <p className="text-xl leading-7 font-bold tracking-tight tabular-nums">{value}</p>
+          <div className="mt-1 flex items-center gap-2">
             {delta !== undefined && <Delta value={delta} />}
             {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
           </div>

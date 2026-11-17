@@ -249,5 +249,5 @@ export async function resendOrderEmail(input: z.input<typeof resendSchema>): Pro
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/admin/emails");
   if (!out.sent) return { ok: false, error: out.reason ?? out.result?.error ?? "Email failed" };
-  return { ok: true, message: out.result?.status === "OUTBOX" ? `Saved to dev outbox (no SMTP configured)` : `Email sent to ${order.email}` };
+  return { ok: true, message: out.result?.status === "OUTBOX" ? (out.result.error ?? "Saved to dev outbox (no SMTP configured)") : `Email sent to ${order.email}` };
 }

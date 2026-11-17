@@ -46,7 +46,7 @@ export function ReviewsList({ reviews }: { reviews: ReviewRow[] }) {
   const all = reviews.length > 0 && reviews.every((r) => selected.has(r.id));
 
   return (
-    <div className="overflow-hidden rounded-xl border bg-card shadow-xs">
+    <div data-admin-card className="overflow-hidden rounded-xl bg-card">
       <div className="flex flex-wrap items-center gap-2 border-b bg-muted/40 px-4 py-2.5 text-sm">
         <Checkbox
           aria-label="Select all reviews"

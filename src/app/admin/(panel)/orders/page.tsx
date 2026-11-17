@@ -81,7 +81,7 @@ export default async function OrdersPage(props: PageProps<"/admin/orders">) {
             })),
         ]}
       />
-      <div className="overflow-hidden rounded-xl border bg-card shadow-xs">
+      <div data-admin-card className="overflow-hidden rounded-xl bg-card">
         <OrdersFilters params={current} ranges={ORDER_DATE_RANGES.map((r) => ({ key: r.key, label: r.label }))} />
         {orders.length ? (
           <>

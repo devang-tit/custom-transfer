@@ -136,7 +136,7 @@ export default async function CustomerDetailPage(props: PageProps<"/admin/custom
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border bg-card p-4 shadow-xs">
+    <div data-admin-card className="rounded-xl bg-card p-4">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="mt-1 font-heading text-xl font-semibold tabular-nums">{value}</p>
     </div>
@@ -145,7 +145,7 @@ function Metric({ label, value }: { label: string; value: string }) {
 
 function MiniStat({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: number }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border bg-card p-3 shadow-xs">
+    <div data-admin-card className="flex items-center gap-3 rounded-xl bg-card p-3">
       <span className="grid size-9 place-items-center rounded-lg bg-accent text-accent-foreground"><Icon className="size-4" /></span>
       <div>
         <p className="font-semibold tabular-nums">{value}</p>

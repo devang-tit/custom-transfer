@@ -63,5 +63,5 @@ export async function sendTestEmailAction(input: z.input<typeof testSchema>): Pr
   const res = await sendTestEmail(parsed.data.to);
   revalidatePath("/admin/emails");
   if (res.status === "FAILED") return { ok: false, error: `Sending failed: ${res.error ?? "unknown error"}` };
-  return { ok: true, message: res.status === "OUTBOX" ? "Saved to the dev outbox. See Admin → Email log" : `Test email sent to ${parsed.data.to}` };
+  return { ok: true, message: res.status === "OUTBOX" ? (res.error ?? "Saved to the dev outbox. See Admin → Email log") : `Test email sent to ${parsed.data.to}` };
 }

@@ -87,7 +87,7 @@ export default async function CustomersPage(props: PageProps<"/admin/customers">
         />
         <SearchBox placeholder="Search name, email, company…" />
       </div>
-      <div className="overflow-hidden rounded-xl border bg-card shadow-xs">
+      <div data-admin-card className="overflow-hidden rounded-xl bg-card">
         {pageRows.length ? (
           <>
             <div className="overflow-x-auto">

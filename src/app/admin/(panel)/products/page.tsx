@@ -68,7 +68,7 @@ export default async function ProductsPage(props: PageProps<"/admin/products">) 
           { key: "low", label: "Low stock", count: counts[4], href: withParams("/admin/products", current, { status: "low" }) },
         ]}
       />
-      <div className="overflow-hidden rounded-xl border bg-card shadow-xs">
+      <div data-admin-card className="overflow-hidden rounded-xl bg-card">
         <ProductsToolbar
           params={current}
           types={PRODUCT_TYPES.map((t) => ({ value: t, label: PRODUCT_TYPE_LABELS[t] }))}

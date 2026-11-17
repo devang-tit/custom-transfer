@@ -47,7 +47,7 @@ export default async function InboxPage(props: PageProps<"/admin/inbox">) {
         }
       />
       {messages.length || selected ? (
-        <div className="grid overflow-hidden rounded-xl border bg-card shadow-xs lg:h-[calc(100svh-12rem)] lg:grid-cols-[360px_minmax(0,1fr)]">
+        <div data-admin-card className="grid overflow-hidden rounded-xl bg-card lg:h-[calc(100svh-12rem)] lg:grid-cols-[360px_minmax(0,1fr)]">
           <ul className="max-h-96 divide-y overflow-y-auto border-b lg:max-h-none lg:border-r lg:border-b-0">
             {messages.map((m) => {
               const active = selected?.id === m.id;

@@ -69,7 +69,7 @@ export default async function OrderDetailPage(props: PageProps<"/admin/orders/[i
         actions={<OrderActionsMenu orderId={order.id} status={order.status} paymentStatus={order.paymentStatus} />}
       />
 
-      <div className="mb-4 rounded-xl border bg-card p-5 shadow-xs">
+      <div data-admin-card className="mb-4 rounded-xl bg-card p-5">
         <OrderProgress status={order.status} />
       </div>
 

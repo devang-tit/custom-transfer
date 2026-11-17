@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+/** Page title row: optional back button, bold title, actions on the right. */
 export function PageHeader({
   title,
   description,
@@ -18,17 +19,23 @@ export function PageHeader({
   children?: React.ReactNode;
 }) {
   return (
-    <div className={cn("mb-6 space-y-3", className)}>
-      {back && (
-        <Link href={back.href} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground">
-          <ArrowLeft className="size-3.5" />
-          {back.label}
-        </Link>
-      )}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0 space-y-1">
-          <h1 className="font-heading text-2xl font-semibold tracking-tight sm:text-[1.7rem]">{title}</h1>
-          {description && <div className="text-sm text-muted-foreground">{description}</div>}
+    <div className={cn("mb-5 space-y-3", className)}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-1.5">
+          {back && (
+            <Link
+              href={back.href}
+              aria-label={back.label}
+              title={back.label}
+              className="mt-px grid size-7 shrink-0 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-black/[0.06] hover:text-foreground dark:hover:bg-white/10"
+            >
+              <ArrowLeft className="size-4" />
+            </Link>
+          )}
+          <div className="min-w-0">
+            <h1 className="text-xl leading-7 font-bold tracking-tight">{title}</h1>
+            {description && <div className="mt-0.5 text-[13px] text-muted-foreground">{description}</div>}
+          </div>
         </div>
         {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
       </div>
@@ -37,7 +44,7 @@ export function PageHeader({
   );
 }
 
-/** Card surface used across admin pages. */
+/** White card with a soft bevel, used for every admin section. */
 export function Panel({
   title,
   description,
@@ -53,18 +60,19 @@ export function Panel({
   bodyClassName?: string;
   children: React.ReactNode;
 }) {
+  const hasHeader = !!(title || action);
   return (
-    <section className={cn("rounded-xl border bg-card text-card-foreground shadow-xs", className)}>
-      {(title || action) && (
-        <header className="flex items-start justify-between gap-3 border-b px-5 py-4">
+    <section data-admin-card className={cn("rounded-xl bg-card text-card-foreground", className)}>
+      {hasHeader && (
+        <header className="flex items-start justify-between gap-3 px-4 pt-4 pb-3">
           <div className="min-w-0">
-            {title && <h2 className="font-heading text-[15px] font-semibold">{title}</h2>}
+            {title && <h2 className="text-sm font-semibold tracking-normal">{title}</h2>}
             {description && <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>}
           </div>
           {action}
         </header>
       )}
-      <div className={cn("p-5", bodyClassName)}>{children}</div>
+      <div className={cn(hasHeader ? "px-4 pb-4" : "p-4", bodyClassName)}>{children}</div>
     </section>
   );
 }

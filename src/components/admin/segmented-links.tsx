@@ -12,7 +12,7 @@ export function SegmentedLinks({
   className?: string;
 }) {
   return (
-    <div className={cn("no-scrollbar inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-lg border bg-muted/60 p-0.5", className)}>
+    <div className={cn("no-scrollbar inline-flex max-w-full items-center gap-1 overflow-x-auto", className)}>
       {items.map((it) => {
         const on = it.key === active;
         return (
@@ -22,13 +22,13 @@ export function SegmentedLinks({
             scroll={false}
             aria-current={on ? "page" : undefined}
             className={cn(
-              "inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-[13px] font-medium whitespace-nowrap transition-all outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
-              on ? "bg-background text-foreground shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"
+              "inline-flex h-7 shrink-0 items-center gap-1.5 rounded-lg px-3 text-[13px] font-[550] whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              on ? "bg-black/[0.08] text-foreground dark:bg-white/[0.12]" : "text-muted-foreground hover:bg-black/[0.05] hover:text-foreground dark:hover:bg-white/[0.06]"
             )}
           >
             {it.label}
             {typeof it.count === "number" && (
-              <span className={cn("rounded px-1 text-[11px] tabular-nums", on ? "bg-muted text-foreground" : "text-muted-foreground/80")}>{it.count}</span>
+              <span className={cn("text-xs tabular-nums", on ? "text-foreground/70" : "text-muted-foreground/80")}>{it.count}</span>
             )}
           </Link>
         );

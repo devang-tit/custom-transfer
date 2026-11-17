@@ -40,10 +40,30 @@ function loadOrder(orderId: string) {
   return db.order.findUnique({ where: { id: orderId }, include: ORDER_INCLUDE });
 }
 
+/** Reserved placeholder domains (RFC 2606), e.g. the seeded hello@inkforge.example. */
+export function isPlaceholderEmail(email: string): boolean {
+  const domain = email.split("@")[1]?.toLowerCase() ?? "";
+  return !domain || /(^|\.)(example|test|invalid|localhost)$/.test(domain) || /^example\.(com|org|net)$/.test(domain);
+}
+
+/** The address emails are sent from (EMAIL_FROM's address, else SMTP_USER). */
+function senderAddress(): string | null {
+  const from = process.env.EMAIL_FROM?.trim() ?? "";
+  const inBrackets = /<([^>]+)>/.exec(from)?.[1];
+  const candidate = inBrackets ?? (from.includes("@") ? from : process.env.SMTP_USER?.trim());
+  return candidate && candidate.includes("@") && !isPlaceholderEmail(candidate) ? candidate : null;
+}
+
+/** Real support inbox: the store's support email unless it's still a placeholder, then the sender. */
+function supportAddress(settings: StoreSettings): string {
+  if (!isPlaceholderEmail(settings.supportEmail)) return settings.supportEmail;
+  return senderAddress() ?? settings.supportEmail;
+}
+
 function brandFrom(settings: StoreSettings): EmailBrand {
   return {
     storeName: settings.storeName,
-    supportEmail: settings.supportEmail,
+    supportEmail: supportAddress(settings),
     supportPhone: settings.supportPhone,
     siteUrl: siteConfig.url,
     address: siteConfig.contact.address,
@@ -96,12 +116,15 @@ async function deliver(args: {
   /** HTML to store in EmailLog instead of the sent HTML (e.g. with secrets redacted) */
   logHtml?: string;
 }): Promise<MailResult> {
-  const res = await sendMail({
+  // Demo data uses example/test addresses: log the email but don't hand it to SMTP (avoids bounces).
+  const res: MailResult = isPlaceholderEmail(args.to)
+    ? { status: "OUTBOX", error: "Not sent: example/test address (demo data)" }
+    : await sendMail({
     to: args.to,
     subject: args.email.subject,
     html: args.email.html,
     text: args.email.text,
-    replyTo: args.settings.supportEmail,
+    replyTo: isPlaceholderEmail(supportAddress(args.settings)) ? undefined : supportAddress(args.settings),
     fromName: args.settings.storeName,
   });
   await db.emailLog
@@ -160,7 +183,8 @@ export async function sendOrderConfirmation(orderId: string, opts: { force?: boo
 export async function sendAdminNewOrder(orderId: string): Promise<SendOutcome> {
   const settings = await getSettings();
   if (!settings.notifications.adminNewOrder) return { sent: false, reason: "New-order alerts are turned off" };
-  const to = settings.notifications.adminEmail.trim() || settings.supportEmail;
+  const to = settings.notifications.adminEmail.trim() || supportAddress(settings);
+  if (isPlaceholderEmail(to)) return { sent: false, reason: "Set a real alert or support email in Settings" };
   if (!to) return { sent: false, reason: "No admin email configured" };
   const order = await loadOrder(orderId);
   if (!order) return { sent: false, reason: "Order not found" };

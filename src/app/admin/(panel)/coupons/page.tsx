@@ -32,7 +32,7 @@ export default async function CouponsPage() {
   return (
     <div className="mx-auto max-w-[1400px]">
       <PageHeader title="Coupons" description="Discount codes customers can apply at checkout." actions={<CouponDialog />} />
-      <div className="overflow-hidden rounded-xl border bg-card shadow-xs">
+      <div data-admin-card className="overflow-hidden rounded-xl bg-card">
         {coupons.length ? (
           <div className="overflow-x-auto">
             <Table>

@@ -75,7 +75,7 @@ export default async function ReviewsPage(props: PageProps<"/admin/reviews">) {
           )}
         </div>
         <aside className="space-y-4">
-          <div className="rounded-xl border bg-card p-5 shadow-xs">
+          <div data-admin-card className="rounded-xl bg-card p-5">
             <p className="text-sm text-muted-foreground">Average rating</p>
             <div className="mt-1 flex items-end gap-2">
               <span className="font-heading text-4xl font-semibold tabular-nums">{(avg._avg.rating ?? 0).toFixed(1)}</span>
