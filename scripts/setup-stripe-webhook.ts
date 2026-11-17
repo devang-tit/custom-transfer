@@ -9,6 +9,7 @@
  */
 import Stripe from "stripe";
 import { PrismaClient } from "@prisma/client";
+import { appDatabaseUrl } from "../src/lib/database-url";
 
 const SETTING_KEY = "stripe_webhook";
 const APP_TAG = "inkforge";
@@ -34,7 +35,7 @@ async function main() {
 
   const url = `${site}/api/stripe/webhook`;
   const stripe = new Stripe(secretKey);
-  const db = new PrismaClient();
+  const db = new PrismaClient({ datasourceUrl: appDatabaseUrl() });
   try {
     const row = await db.setting.findUnique({ where: { key: SETTING_KEY } });
     const stored: Stored | null = row ? (JSON.parse(row.value) as Stored) : null;

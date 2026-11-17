@@ -2,9 +2,11 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { randomBytes } from "node:crypto";
 import { DEFAULT_SETTINGS, DEFAULT_TIERS, computeTotals, priceLine } from "../src/lib/pricing";
+import { appDatabaseUrl } from "../src/lib/database-url";
 import type { LineSelection, PriceTier, ProductOptions, PricingProduct } from "../src/lib/types";
 
-const db = new PrismaClient();
+// App queries go through the pooler when available (the direct URL is kept for migrations).
+const db = new PrismaClient({ datasourceUrl: appDatabaseUrl() });
 
 // Deterministic PRNG so demo data is stable between resets.
 let seed = 42;
