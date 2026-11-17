@@ -81,14 +81,14 @@ export default async function ProductPage(props: PageProps<"/products/[slug]">) 
         </BreadcrumbList>
       </Breadcrumb>
 
-      <div className="mt-6 grid gap-10 lg:grid-cols-2 lg:gap-14">
+      <div className="mt-6 grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-12">
         <div>
           <ProductGallery images={product.images} name={product.name} badge={product.badge} />
         </div>
         <div className="min-w-0">
-          <p className="text-xs font-semibold tracking-[0.16em] text-primary uppercase">{PRODUCT_TYPE_LABELS[product.type]}</p>
+          <p className="text-sm text-muted-foreground">{PRODUCT_TYPE_LABELS[product.type]}</p>
           <div className="mt-2 flex items-start justify-between gap-4">
-            <h1 className="text-3xl leading-tight font-bold sm:text-4xl">{product.name}</h1>
+            <h1 className="text-3xl leading-tight font-bold sm:text-[32px]">{product.name}</h1>
             <WishlistButton productId={product.id} initial={wishlisted} slug={product.slug} />
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
@@ -102,7 +102,7 @@ export default async function ProductPage(props: PageProps<"/products/[slug]">) 
               <span className="text-muted-foreground">No reviews yet</span>
             )}
             {product.turnaround && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-xs font-semibold text-success">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-foreground">
                 <Clock className="size-3.5" /> {product.turnaround}
               </span>
             )}
@@ -113,7 +113,7 @@ export default async function ProductPage(props: PageProps<"/products/[slug]">) 
             )}
           </div>
           <div className="mt-5">
-            <Price amount={fromPrice(product)} compareAt={product.compareAtPrice} prefix={isApparel ? "Blank from" : "From"} className="text-2xl" />
+            <Price amount={fromPrice(product)} compareAt={product.compareAtPrice} prefix={isApparel ? "Blank from" : "From"} className="text-xl [&_span.font-semibold]:font-normal" />
           </div>
           {product.shortDescription && <p className="mt-4 leading-relaxed text-muted-foreground">{product.shortDescription}</p>}
           {product.features.length > 0 && (

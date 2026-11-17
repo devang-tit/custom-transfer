@@ -56,14 +56,12 @@ export function SearchCommand({ className }: { className?: string }) {
         type="button"
         onClick={() => setOpen(true)}
         className={cn(
-          "group inline-flex h-9 items-center gap-2 rounded-xl border bg-muted/50 px-3 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+          "grid size-9 place-items-center rounded-full text-foreground transition-colors hover:bg-muted",
           className
         )}
         aria-label="Search products"
       >
-        <Search className="size-4" />
-        <span className="hidden xl:inline">Search transfers…</span>
-        <kbd className="ml-3 hidden rounded-md border bg-background px-1.5 py-0.5 font-mono text-[10px] font-medium xl:inline">⌘K</kbd>
+        <Search className="size-[1.15rem]" />
       </button>
       <CommandDialog open={open} onOpenChange={setOpen} title="Search products" description="Search the InkForge catalog" className="sm:max-w-xl">
         <Command shouldFilter={false}>

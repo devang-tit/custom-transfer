@@ -37,7 +37,7 @@ export function DesktopNav({ categories, featured }: { categories: NavCategory[]
   const isActive = (href: string) => (href === "/shop" ? pathname.startsWith("/shop") || pathname.startsWith("/products") : pathname.startsWith(href));
 
   return (
-    <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Main">
+    <nav className="hidden items-center gap-1 lg:flex" aria-label="Main">
       {siteConfig.mainNav.map((item) =>
         item.href === "/shop" ? (
           <div key={item.href} onMouseEnter={enter} onMouseLeave={leave}>
@@ -46,8 +46,8 @@ export function DesktopNav({ categories, featured }: { categories: NavCategory[]
               aria-expanded={open}
               onClick={() => setOpen((o) => !o)}
               className={cn(
-                "inline-flex h-9 items-center gap-1 rounded-xl px-3 text-sm font-medium transition-colors hover:bg-muted",
-                (open || isActive(item.href)) && "bg-muted"
+                "inline-flex h-9 items-center gap-1 px-2.5 text-sm underline-offset-[6px] transition-colors hover:underline",
+                (open || isActive(item.href)) && "underline"
               )}
             >
               {item.title}
@@ -141,8 +141,8 @@ export function DesktopNav({ categories, featured }: { categories: NavCategory[]
             key={item.href}
             href={item.href}
             className={cn(
-              "inline-flex h-9 items-center rounded-xl px-3 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted hover:text-foreground",
-              isActive(item.href) && "bg-muted text-foreground"
+              "inline-flex h-9 items-center px-2.5 text-sm underline-offset-[6px] transition-colors hover:underline",
+              isActive(item.href) && "underline"
             )}
           >
             {item.title}

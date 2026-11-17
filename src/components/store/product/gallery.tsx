@@ -18,8 +18,8 @@ export function ProductGallery({ images, name, badge }: { images: string[]; name
               onClick={() => setActive(i)}
               aria-label={`Show image ${i + 1}`}
               className={cn(
-                "relative size-16 shrink-0 overflow-hidden rounded-xl border-2 bg-muted transition-all sm:size-20",
-                active === i ? "border-primary" : "border-transparent opacity-70 hover:opacity-100"
+                "relative size-16 shrink-0 overflow-hidden border bg-muted transition-all sm:size-20",
+                active === i ? "border-foreground" : "border-transparent opacity-70 hover:opacity-100"
               )}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -28,7 +28,7 @@ export function ProductGallery({ images, name, badge }: { images: string[]; name
           ))}
         </div>
       )}
-      <div className="relative aspect-square flex-1 overflow-hidden rounded-[2rem] border bg-muted">
+      <div className="relative aspect-square flex-1 overflow-hidden bg-muted">
         <AnimatePresence mode="wait">
           <motion.img
             key={list[active]}
@@ -42,7 +42,7 @@ export function ProductGallery({ images, name, badge }: { images: string[]; name
           />
         </AnimatePresence>
         {badge && (
-          <span className="absolute top-4 left-4 rounded-full bg-foreground px-3 py-1 text-xs font-semibold text-background shadow">{badge}</span>
+          <span className="absolute top-4 right-4 rounded-full bg-background px-3 py-1 text-xs font-medium text-foreground">{badge}</span>
         )}
       </div>
     </div>

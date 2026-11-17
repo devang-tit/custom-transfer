@@ -36,7 +36,7 @@ export function SizePicker({ sizes, value, onChange, compact }: { sizes: SizeOpt
             aria-checked={on}
             onClick={() => onChange(s.id)}
             className={cn(
-              "relative rounded-xl border bg-card px-3 py-2.5 text-left transition-all hover:border-primary/50",
+              "relative rounded-[0.875rem] border bg-card px-3 py-2.5 text-left transition-all hover:border-primary/50",
               on && "border-primary bg-primary/5 ring-1 ring-primary"
             )}
           >
@@ -67,7 +67,7 @@ export function FinishPicker({ finishes, value, onChange }: { finishes: PricedOp
             aria-checked={on}
             onClick={() => onChange(f.id)}
             className={cn(
-              "rounded-xl border bg-card px-3 py-2.5 text-left transition-all hover:border-primary/50",
+              "rounded-[0.875rem] border bg-card px-3 py-2.5 text-left transition-all hover:border-primary/50",
               on && "border-primary bg-primary/5 ring-1 ring-primary"
             )}
           >
@@ -86,7 +86,7 @@ export function FinishPicker({ finishes, value, onChange }: { finishes: PricedOp
 export function QuantityStepper({ value, onChange, min = 1, max = 9999 }: { value: number; onChange: (n: number) => void; min?: number; max?: number }) {
   const set = (n: number) => onChange(Math.max(min, Math.min(max, Math.floor(n) || min)));
   return (
-    <div className="inline-flex h-11 items-center rounded-xl border bg-card">
+    <div className="inline-flex h-11 items-center rounded-[0.875rem] border bg-card">
       <button type="button" aria-label="Decrease" disabled={value <= min} onClick={() => set(value - 1)} className="grid h-full w-11 place-items-center text-muted-foreground hover:text-foreground disabled:opacity-40">
         <Minus className="size-4" />
       </button>

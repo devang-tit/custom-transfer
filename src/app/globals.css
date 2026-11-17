@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-  --font-heading: var(--font-bricolage), var(--font-geist), ui-sans-serif, sans-serif;
+  --font-heading: var(--font-inter), ui-sans-serif, sans-serif;
 
   /* CMYK brand inks */
   --color-ink-cyan: var(--ink-cyan);
@@ -75,39 +75,41 @@
 }
 
 :root {
-  --radius: 0.75rem;
+  /* Storefront: clean, image-first commerce theme (white / black, square-ish corners). */
+  --radius: 0.25rem;
 
-  --background: oklch(0.99 0.002 95);
-  --foreground: oklch(0.17 0.015 275);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.17 0.015 275);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.17 0.015 275);
-  --primary: oklch(0.53 0.25 280);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.96 0.008 280);
-  --secondary-foreground: oklch(0.22 0.03 278);
-  --muted: oklch(0.965 0.005 280);
-  --muted-foreground: oklch(0.5 0.02 275);
-  --accent: oklch(0.955 0.025 285);
-  --accent-foreground: oklch(0.32 0.14 280);
-  --destructive: oklch(0.58 0.23 25);
-  --success: oklch(0.62 0.16 155);
-  --warning: oklch(0.75 0.16 70);
-  --border: oklch(0.915 0.008 280);
-  --input: oklch(0.9 0.01 280);
-  --ring: oklch(0.53 0.25 280);
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --popover: #ffffff;
+  --popover-foreground: #000000;
+  --primary: #000000;
+  --primary-foreground: #ffffff;
+  --secondary: #eef1ea;
+  --secondary-foreground: #000000;
+  --muted: #f5f6f3;
+  --muted-foreground: #5c5c5c;
+  --accent: #eef1ea;
+  --accent-foreground: #000000;
+  --destructive: #c4161c;
+  --success: #2e7d4f;
+  --warning: #b8860b;
+  --border: #dfdfdf;
+  --input: #dfdfdf;
+  --ring: #000000;
+  --band: #121212;
 
   --ink-cyan: oklch(0.76 0.14 215);
   --ink-magenta: oklch(0.64 0.26 355);
   --ink-yellow: oklch(0.87 0.17 90);
   --ink-key: oklch(0.17 0.02 275);
 
-  --chart-1: oklch(0.53 0.25 280);
-  --chart-2: oklch(0.72 0.14 215);
-  --chart-3: oklch(0.64 0.26 355);
-  --chart-4: oklch(0.8 0.16 75);
-  --chart-5: oklch(0.65 0.16 155);
+  --chart-1: #000000;
+  --chart-2: #5c5c5c;
+  --chart-3: #9a9a9a;
+  --chart-4: #c8cfc0;
+  --chart-5: #eef1ea;
 
   --sidebar: oklch(0.17 0.02 275);
   --sidebar-foreground: oklch(0.86 0.012 280);
@@ -120,26 +122,27 @@
 }
 
 .dark {
-  --background: oklch(0.145 0.015 275);
-  --foreground: oklch(0.97 0.005 280);
-  --card: oklch(0.18 0.018 275);
-  --card-foreground: oklch(0.97 0.005 280);
-  --popover: oklch(0.19 0.02 275);
-  --popover-foreground: oklch(0.97 0.005 280);
-  --primary: oklch(0.64 0.22 282);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.24 0.02 275);
-  --secondary-foreground: oklch(0.96 0.005 280);
-  --muted: oklch(0.225 0.018 275);
-  --muted-foreground: oklch(0.7 0.02 275);
-  --accent: oklch(0.26 0.045 280);
-  --accent-foreground: oklch(0.92 0.05 285);
-  --destructive: oklch(0.68 0.2 22);
-  --success: oklch(0.7 0.15 155);
-  --warning: oklch(0.8 0.15 75);
-  --border: oklch(1 0 0 / 9%);
-  --input: oklch(1 0 0 / 13%);
-  --ring: oklch(0.64 0.22 282);
+  --background: #0b0b0b;
+  --foreground: #f2f2f2;
+  --card: #141414;
+  --card-foreground: #f2f2f2;
+  --popover: #161616;
+  --popover-foreground: #f2f2f2;
+  --primary: #f2f2f2;
+  --primary-foreground: #0b0b0b;
+  --secondary: #1f221d;
+  --secondary-foreground: #f2f2f2;
+  --muted: #171717;
+  --muted-foreground: #a3a3a3;
+  --accent: #1f221d;
+  --accent-foreground: #f2f2f2;
+  --destructive: #ff6b6b;
+  --success: #5cc98a;
+  --warning: #e0b44c;
+  --border: #2a2a2a;
+  --input: #333333;
+  --ring: #f2f2f2;
+  --band: #1c1c1c;
 
   --chart-1: oklch(0.66 0.21 282);
   --chart-2: oklch(0.76 0.13 215);
@@ -169,7 +172,8 @@
     font-feature-settings: "ss01", "cv11";
   }
   h1, h2, h3, h4 {
-    @apply font-heading tracking-tight text-balance;
+    @apply font-heading text-balance;
+    letter-spacing: -0.01em;
   }
   button:not(:disabled),
   [role="button"]:not(:disabled) {
@@ -182,35 +186,29 @@
 
 /* ---------- Brand utilities ---------- */
 
-/** Page container: consistent gutters everywhere */
+/** Page container: consistent gutters everywhere (wide, airy layout) */
 @utility container-page {
   margin-inline: auto;
   width: 100%;
-  max-width: 80rem;
+  max-width: 90rem;
   padding-inline: 1rem;
   @variant sm { padding-inline: 1.5rem; }
-  @variant lg { padding-inline: 2rem; }
+  @variant lg { padding-inline: 2.5rem; }
 }
 
-/** CMYK ink gradient fill */
+/** Former CMYK gradient fill: now a solid charcoal band (keeps white text readable) */
 @utility bg-ink-gradient {
-  background-image: linear-gradient(110deg, var(--ink-cyan) 0%, var(--primary) 38%, var(--ink-magenta) 70%, var(--ink-yellow) 100%);
+  background-color: var(--band);
 }
 
-/** Gradient text */
+/** Former gradient text: plain text in the current color */
 @utility text-ink-gradient {
-  background-image: linear-gradient(110deg, var(--ink-cyan) 0%, var(--primary) 35%, var(--ink-magenta) 75%, oklch(0.78 0.18 60) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: inherit;
 }
 
-/** Subtle blueprint grid background */
+/** Former blueprint grid: intentionally blank in the clean theme */
 @utility bg-grid {
-  background-image:
-    linear-gradient(to right, color-mix(in oklch, var(--foreground) 6%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in oklch, var(--foreground) 6%, transparent) 1px, transparent 1px);
-  background-size: 44px 44px;
+  background-image: none;
 }
 
 /** Dotted background used behind editors/canvases */
@@ -231,24 +229,17 @@
   background-position: 0 0, 0 8px, 8px -8px, -8px 0;
 }
 
-/** Frosted glass surface */
+/** Former frosted surface: solid background in the clean theme */
 @utility glass {
-  background: color-mix(in oklch, var(--background) 72%, transparent);
-  backdrop-filter: blur(16px) saturate(1.4);
-  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  background: var(--background);
 }
 
-/** Soft elevated shadow used on premium cards */
+/** Former soft card shadow / CTA glow: flat in the clean theme */
 @utility shadow-premium {
-  box-shadow:
-    0 1px 2px color-mix(in oklch, var(--ink-key) 6%, transparent),
-    0 8px 24px -6px color-mix(in oklch, var(--ink-key) 12%, transparent),
-    0 24px 48px -12px color-mix(in oklch, var(--primary) 10%, transparent);
+  box-shadow: none;
 }
-
-/** Glow around primary CTAs */
 @utility shadow-glow {
-  box-shadow: 0 10px 30px -8px color-mix(in oklch, var(--primary) 55%, transparent);
+  box-shadow: none;
 }
 
 @utility no-scrollbar {
@@ -258,6 +249,22 @@
 
 @media print {
   .no-print { display: none !important; }
+}
+
+/* Storefront buttons: 14px corners; outline = 1px foreground border */
+[data-slot="button"] {
+  border-radius: 0.875rem;
+  font-weight: 500;
+}
+[data-slot="button"][data-variant="outline"] {
+  background: transparent;
+  border-color: var(--foreground);
+}
+[data-slot="button"][data-variant="outline"]:hover {
+  background: color-mix(in oklch, var(--foreground) 6%, transparent);
+}
+[data-slot="button"][data-size^="icon"] {
+  border-radius: 9999px;
 }
 
 /* =====================================================================

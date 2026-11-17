@@ -30,14 +30,17 @@ export function NewsletterForm({ className, tone = "default" }: { className?: st
         required
         placeholder="you@brand.com"
         className={cn(
-          "h-12 w-full rounded-2xl border pr-32 pl-4 text-sm outline-none transition-shadow focus-visible:ring-3 focus-visible:ring-ring/40",
-          tone === "inverted" ? "border-white/15 bg-white/10 text-white placeholder:text-white/50" : "bg-background"
+          "h-12 w-full rounded-[0.875rem] border pr-32 pl-4 text-sm outline-none transition-shadow focus-visible:ring-2",
+          tone === "inverted" ? "border-white/30 bg-transparent text-white placeholder:text-white/50 focus-visible:ring-white/60" : "bg-background focus-visible:ring-ring/40"
         )}
       />
       <button
         type="submit"
         disabled={pending}
-        className="absolute right-1.5 inline-flex h-9 items-center gap-1.5 rounded-xl bg-primary px-3.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+        className={cn(
+          "absolute right-1.5 inline-flex h-9 items-center gap-1.5 rounded-[0.625rem] px-3.5 text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-60",
+          tone === "inverted" ? "bg-white text-black" : "bg-primary text-primary-foreground"
+        )}
       >
         {pending ? <LoaderCircle className="size-4 animate-spin" /> : state?.ok ? <Check className="size-4" /> : null}
         Subscribe

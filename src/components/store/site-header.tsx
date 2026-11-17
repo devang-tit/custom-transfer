@@ -32,14 +32,14 @@ export async function SiteHeader() {
   const headerUser = user ? { name: user.name, email: user.email, role: user.role } : null;
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur-xl backdrop-saturate-150">
-      <div className="container-page flex h-16 items-center gap-2 lg:gap-6">
+    <header className="sticky top-0 z-40 border-b bg-background">
+      <div className="container-page flex h-16 items-center gap-2 lg:h-[72px] lg:gap-8">
         <MobileNav categories={categories} user={headerUser} />
         <Logo className="shrink-0" />
         <DesktopNav categories={categories} featured={featured} />
-        <div className="ml-auto flex items-center gap-1 sm:gap-1.5">
+        <div className="ml-auto flex items-center gap-0.5">
           <SearchCommand />
-          <ThemeToggle className="size-9 rounded-xl" />
+          <ThemeToggle className="size-9 rounded-full" />
           <AccountMenu user={headerUser} />
           <CartButton />
         </div>

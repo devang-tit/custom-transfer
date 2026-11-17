@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutGrid, LogOut, Package, Palette, Shield, User, Heart } from "lucide-react";
+import { LayoutGrid, LogOut, Package, Palette, Shield, User, UserRound, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,14 +20,11 @@ export type HeaderUser = { name: string; email: string; role: string } | null;
 export function AccountMenu({ user }: { user: HeaderUser }) {
   if (!user) {
     return (
-      <div className="hidden items-center gap-1 sm:flex">
-        <Button asChild variant="ghost" className="h-9 rounded-xl px-3">
-          <Link href="/login">Sign in</Link>
-        </Button>
-        <Button asChild className="h-9 rounded-xl px-3.5">
-          <Link href="/register">Create account</Link>
-        </Button>
-      </div>
+      <Button asChild variant="ghost" size="icon" className="size-9 rounded-full">
+        <Link href="/login" aria-label="Sign in">
+          <UserRound className="size-[1.15rem]" />
+        </Link>
+      </Button>
     );
   }
   const isStaff = user.role === "ADMIN" || user.role === "STAFF";
@@ -36,10 +33,10 @@ export function AccountMenu({ user }: { user: HeaderUser }) {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="grid size-9 place-items-center rounded-full bg-ink-gradient p-[2px] outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="grid size-9 place-items-center rounded-full outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
           aria-label="Account menu"
         >
-          <span className="grid size-full place-items-center rounded-full bg-background text-xs font-bold">{initials(user.name)}</span>
+          <span className="grid size-7 place-items-center rounded-full bg-foreground text-[11px] font-semibold text-background">{initials(user.name)}</span>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-60">

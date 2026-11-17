@@ -74,7 +74,7 @@ function Summary({
   extra?: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border bg-card p-4 shadow-premium sm:p-5">
+    <div className="border-t pt-5">
       <div className="flex items-end justify-between gap-4">
         <div>
           <p className="text-xs text-muted-foreground">
@@ -167,7 +167,7 @@ function StandardConfigurator({ product, defaultSizeId }: { product: ProductDTO;
                 key={q}
                 type="button"
                 onClick={() => setQuantity(q)}
-                className={cn("h-11 rounded-xl border px-3.5 text-sm font-medium transition-colors hover:border-primary/50", quantity === q && "border-primary bg-primary/5")}
+                className={cn("h-11 rounded-[0.875rem] border px-3.5 text-sm font-medium transition-colors hover:border-primary/50", quantity === q && "border-primary bg-primary/5")}
               >
                 {q}
               </button>
@@ -361,7 +361,7 @@ function ApparelConfigurator({ product }: { product: ProductDTO }) {
           {locations.map((l) => {
             const on = locs.includes(l.id);
             return (
-              <label key={l.id} className={cn("flex cursor-pointer items-center gap-3 rounded-xl border bg-card px-3 py-2.5 transition-all hover:border-primary/50", on && "border-primary bg-primary/5 ring-1 ring-primary")}>
+              <label key={l.id} className={cn("flex cursor-pointer items-center gap-3 rounded-[0.875rem] border bg-card px-3 py-2.5 transition-all hover:border-primary/50", on && "border-primary bg-primary/5 ring-1 ring-primary")}>
                 <Checkbox checked={on} onCheckedChange={(v) => setLocs((cur) => (v ? [...cur, l.id] : cur.filter((x) => x !== l.id)))} />
                 <span className="flex-1 text-sm font-semibold">{l.label}</span>
                 <span className="text-xs text-muted-foreground">+{formatMoney(l.price)}</span>
@@ -375,7 +375,7 @@ function ApparelConfigurator({ product }: { product: ProductDTO }) {
         <OptionLabel step={3} title="Sizes & quantities" hint="Mix sizes — discounts use the total" right={<span className="text-sm font-semibold tabular-nums">{price.quantity} pcs</span>} />
         <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
           {sizes.map((s) => (
-            <label key={s.size} className="rounded-xl border bg-card p-2 text-center focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
+            <label key={s.size} className="rounded-[0.875rem] border bg-card p-2 text-center focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
               <span className="block text-xs font-semibold">{s.size}</span>
               <input
                 inputMode="numeric"
