@@ -1,33 +1,37 @@
 // InkForge — custom transfers & apparel printing store.
-// SQLite for local dev. To use Postgres/MySQL, change `provider` and DATABASE_URL.
-// JSON payloads are stored as String (parsed in src/lib/json.ts) so the schema works on every provider.
+// PostgreSQL (Vercel: Prisma Postgres integration provides DATABASE_URL).
+// Schema changes: edit this file, then `npm run db:migrate -- --name <change>` against a dev database.
+// JSON payloads are stored as String (parsed in src/lib/json.ts).
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id             String         @id @default(cuid())
-  email          String         @unique
-  name           String
-  passwordHash   String
-  role           String         @default("CUSTOMER") // CUSTOMER | STAFF | ADMIN
-  phone          String?
-  company        String?
-  avatarUrl      String?
-  marketingOptIn Boolean        @default(false)
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  addresses      Address[]
-  orders         Order[]
-  designs        SavedDesign[]
-  reviews        Review[]
-  wishlist       WishlistItem[]
+  id                String               @id @default(cuid())
+  email             String               @unique
+  name              String
+  passwordHash      String
+  role              String               @default("CUSTOMER") // CUSTOMER | STAFF | ADMIN
+  phone             String?
+  company           String?
+  avatarUrl         String?
+  marketingOptIn    Boolean              @default(false)
+  /// Sessions issued before this moment are rejected (set on password reset/change).
+  passwordChangedAt DateTime?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  addresses         Address[]
+  orders            Order[]
+  designs           SavedDesign[]
+  reviews           Review[]
+  wishlist          WishlistItem[]
+  resetTokens       PasswordResetToken[]
 }
 
 model Address {
@@ -125,33 +129,33 @@ model SavedDesign {
 }
 
 model Order {
-  id              String      @id @default(cuid())
-  number          String      @unique // e.g. IF-10482
+  id              String       @id @default(cuid())
+  number          String       @unique // e.g. IF-10482
   userId          String?
-  user            User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user            User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
   email           String
   customerName    String
   phone           String?
-  status          String      @default("PENDING") // see src/lib/order-status.ts
-  paymentStatus   String      @default("UNPAID") // UNPAID | PAID | REFUNDED | FAILED
+  status          String       @default("PENDING") // see src/lib/order-status.ts
+  paymentStatus   String       @default("UNPAID") // UNPAID | PAID | REFUNDED | FAILED
   paymentMethod   String? // card | stripe | paypal | invoice
   paymentRef      String?
-  shippingMethod  String      @default("standard")
-  shippingAddress String      @default("{}") // AddressInput JSON
+  shippingMethod  String       @default("standard")
+  shippingAddress String       @default("{}") // AddressInput JSON
   subtotal        Int
-  discount        Int         @default(0)
-  shipping        Int         @default(0)
-  rushFee         Int         @default(0)
-  tax             Int         @default(0)
+  discount        Int          @default(0)
+  shipping        Int          @default(0)
+  rushFee         Int          @default(0)
+  tax             Int          @default(0)
   total           Int
   couponCode      String?
-  isRush          Boolean     @default(false)
+  isRush          Boolean      @default(false)
   notes           String?
   internalNotes   String?
   carrier         String?
   trackingNumber  String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
   items           OrderItem[]
   events          OrderEvent[]
   emails          EmailLog[]
@@ -240,4 +244,17 @@ model EmailLog {
 
   @@index([orderId])
   @@index([createdAt])
+}
+
+/// Single-use password reset links. Only a SHA-256 hash of the token is stored.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
 }

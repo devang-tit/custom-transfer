@@ -14,6 +14,8 @@ import {
   orderConfirmationEmail,
   orderStatusEmail,
   orderUpdateEmail,
+  passwordChangedEmail,
+  passwordResetEmail,
   testEmail,
   type EmailBrand,
   type EmailOrder,
@@ -85,7 +87,15 @@ function toEmailOrder(order: LoadedOrder, settings: StoreSettings): EmailOrder {
   };
 }
 
-async function deliver(args: { to: string; email: RenderedEmail; template: string; orderId?: string | null; settings: StoreSettings }): Promise<MailResult> {
+async function deliver(args: {
+  to: string;
+  email: RenderedEmail;
+  template: string;
+  orderId?: string | null;
+  settings: StoreSettings;
+  /** HTML to store in EmailLog instead of the sent HTML (e.g. with secrets redacted) */
+  logHtml?: string;
+}): Promise<MailResult> {
   const res = await sendMail({
     to: args.to,
     subject: args.email.subject,
@@ -104,7 +114,7 @@ async function deliver(args: { to: string; email: RenderedEmail; template: strin
         status: res.status,
         error: res.error ?? null,
         messageId: res.messageId ?? null,
-        html: args.email.html,
+        html: args.logHtml ?? args.email.html,
       },
     })
     .catch((e) => console.error("[email] could not write EmailLog", e));
@@ -223,5 +233,27 @@ export function notifyOrderUpdate(orderId: string, message: string, author: stri
     if (!order) return;
     const email = orderUpdateEmail(toEmailOrder(order, settings), brandFrom(settings), { message, author: `${author} at ${settings.storeName}` });
     await deliver({ to: order.email, email, template: "order_update", orderId, settings });
+  });
+}
+
+// ---------------- account security emails (always on) ----------------
+
+/** Sends the reset link. The token is redacted from the stored EmailLog copy. */
+export function notifyPasswordReset(userId: string, rawToken: string, minutes: number) {
+  schedule(async () => {
+    const [settings, user] = await Promise.all([getSettings(), db.user.findUnique({ where: { id: userId }, select: { email: true, name: true } })]);
+    if (!user) return;
+    const url = absoluteUrl(siteConfig.url, `/reset-password?token=${encodeURIComponent(rawToken)}`);
+    const email = passwordResetEmail(brandFrom(settings), { name: user.name, url, minutes });
+    await deliver({ to: user.email, email, template: "password_reset", settings, logHtml: email.html.split(rawToken).join("REDACTED") });
+  });
+}
+
+export function notifyPasswordChanged(userId: string, via: "reset" | "account") {
+  schedule(async () => {
+    const [settings, user] = await Promise.all([getSettings(), db.user.findUnique({ where: { id: userId }, select: { email: true, name: true } })]);
+    if (!user) return;
+    const email = passwordChangedEmail(brandFrom(settings), { name: user.name, when: new Date(), via, forgotUrl: absoluteUrl(siteConfig.url, "/forgot-password") });
+    await deliver({ to: user.email, email, template: "password_changed", settings });
   });
 }

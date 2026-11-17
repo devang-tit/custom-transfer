@@ -25,7 +25,7 @@ export default async function ProductsPage(props: PageProps<"/admin/products">) 
   const params = { q: sp(raw.q), type: sp(raw.type), category: sp(raw.category), status: sp(raw.status) };
   const where: Prisma.ProductWhereInput = { AND: [] };
   const and = where.AND as Prisma.ProductWhereInput[];
-  if (params.q) and.push({ OR: [{ name: { contains: params.q } }, { sku: { contains: params.q } }, { slug: { contains: params.q } }] });
+  if (params.q) and.push({ OR: [{ name: { contains: params.q, mode: "insensitive" } }, { sku: { contains: params.q, mode: "insensitive" } }, { slug: { contains: params.q, mode: "insensitive" } }] });
   if (params.type && (PRODUCT_TYPES as readonly string[]).includes(params.type)) and.push({ type: params.type });
   if (params.category) and.push({ categoryId: params.category });
   if (params.status === "active") and.push({ active: true });

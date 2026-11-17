@@ -11,6 +11,8 @@ export type SessionPayload = {
   role: "CUSTOMER" | "STAFF" | "ADMIN" | string;
   name: string;
   email: string;
+  /** Issued-at, seconds since epoch (set by jose) */
+  iat?: number;
 };
 
 function secretKey() {
@@ -21,11 +23,12 @@ function secretKey() {
   return new TextEncoder().encode(secret);
 }
 
-export async function signSession(payload: SessionPayload): Promise<string> {
+/** `issuedAt` (seconds) lets a session minted right after a password change sit on the new side of the cutoff. */
+export async function signSession(payload: SessionPayload, issuedAt?: number): Promise<string> {
   return new SignJWT({ role: payload.role, name: payload.name, email: payload.email })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(payload.sub)
-    .setIssuedAt()
+    .setIssuedAt(issuedAt)
     .setExpirationTime(`${SESSION_MAX_AGE}s`)
     .sign(secretKey());
 }
@@ -40,6 +43,7 @@ export async function verifySession(token: string | undefined | null): Promise<S
       role: String(payload.role ?? "CUSTOMER"),
       name: String(payload.name ?? ""),
       email: String(payload.email ?? ""),
+      iat: typeof payload.iat === "number" ? payload.iat : undefined,
     };
   } catch {
     return null;

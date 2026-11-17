@@ -9,6 +9,9 @@ import { loginAction, type AuthState } from "@/lib/actions/auth";
 import { FormError, FormField, fieldInputClass } from "@/components/auth/form-field";
 import { PasswordInput } from "@/components/auth/password-input";
 
+/** Demo credentials only work on a locally seeded database, so the helper is hidden in production builds. */
+const SHOW_DEMO_ACCOUNTS = process.env.NODE_ENV !== "production" || process.env.NEXT_PUBLIC_SHOW_DEMO_ACCOUNTS === "true";
+
 const DEMO = [
   { role: "Customer", email: "customer@inkforge.test", password: "Customer@123" },
   { role: "Admin", email: "admin@inkforge.test", password: "Admin@12345" },
@@ -18,7 +21,7 @@ export function LoginForm({ next }: { next?: string }) {
   const [state, formAction, pending] = useActionState<AuthState, FormData>(loginAction, undefined);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showDemo, setShowDemo] = useState(true);
+  const [showDemo, setShowDemo] = useState(SHOW_DEMO_ACCOUNTS);
 
   return (
     <div className="grid gap-6">

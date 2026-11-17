@@ -45,7 +45,7 @@ export default async function ShopPage(props: PageProps<"/shop">) {
     where: {
       ...(activeCategory ? { categoryId: activeCategory.id } : {}),
       ...(q
-        ? { OR: [{ name: { contains: q } }, { shortDescription: { contains: q } }, { description: { contains: q } }, { sku: { contains: q } }] }
+        ? { OR: [{ name: { contains: q, mode: "insensitive" } }, { shortDescription: { contains: q, mode: "insensitive" } }, { description: { contains: q, mode: "insensitive" } }, { sku: { contains: q, mode: "insensitive" } }] }
         : {}),
     },
     orderBy: [{ featured: "desc" }, { sortOrder: "asc" }],

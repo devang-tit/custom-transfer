@@ -29,7 +29,7 @@ export default async function EmailLogPage(props: PageProps<"/admin/emails">) {
   const where: Prisma.EmailLogWhereInput = {
     ...(status !== "all" ? { status } : {}),
     ...(template !== "all" ? { template } : {}),
-    ...(q ? { OR: [{ to: { contains: q } }, { subject: { contains: q } }] } : {}),
+    ...(q ? { OR: [{ to: { contains: q, mode: "insensitive" } }, { subject: { contains: q, mode: "insensitive" } }] } : {}),
   };
   const [logs, total, counts] = await Promise.all([
     db.emailLog.findMany({

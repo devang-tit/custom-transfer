@@ -26,22 +26,22 @@ export default async function AdminSearchPage(props: PageProps<"/admin/search">)
   }
   const [orders, customers, products, coupons] = await Promise.all([
     db.order.findMany({
-      where: { OR: [{ number: { contains: q } }, { email: { contains: q } }, { customerName: { contains: q } }, { trackingNumber: { contains: q } }] },
+      where: { OR: [{ number: { contains: q, mode: "insensitive" } }, { email: { contains: q, mode: "insensitive" } }, { customerName: { contains: q, mode: "insensitive" } }, { trackingNumber: { contains: q, mode: "insensitive" } }] },
       orderBy: { createdAt: "desc" },
       take: 10,
       select: { id: true, number: true, customerName: true, email: true, status: true, total: true, createdAt: true },
     }),
     db.user.findMany({
-      where: { OR: [{ name: { contains: q } }, { email: { contains: q } }, { company: { contains: q } }, { phone: { contains: q } }] },
+      where: { OR: [{ name: { contains: q, mode: "insensitive" } }, { email: { contains: q, mode: "insensitive" } }, { company: { contains: q, mode: "insensitive" } }, { phone: { contains: q, mode: "insensitive" } }] },
       take: 8,
       select: { id: true, name: true, email: true, company: true, role: true },
     }),
     db.product.findMany({
-      where: { OR: [{ name: { contains: q } }, { sku: { contains: q } }, { slug: { contains: q } }] },
+      where: { OR: [{ name: { contains: q, mode: "insensitive" } }, { sku: { contains: q, mode: "insensitive" } }, { slug: { contains: q, mode: "insensitive" } }] },
       take: 8,
       select: { id: true, name: true, sku: true, type: true, images: true, active: true },
     }),
-    db.coupon.findMany({ where: { code: { contains: q.toUpperCase() } }, take: 5, select: { id: true, code: true, description: true } }),
+    db.coupon.findMany({ where: { code: { contains: q.toUpperCase(), mode: "insensitive" } }, take: 5, select: { id: true, code: true, description: true } }),
   ]);
   const total = orders.length + customers.length + products.length + coupons.length;
 

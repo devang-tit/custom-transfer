@@ -15,13 +15,10 @@ import { toProductDTO, toPricingProduct, productImage } from "@/lib/products";
 import { siteConfig } from "@/config/site";
 import { findValidCoupon } from "./coupon-lib";
 import { getStripe, paidStatusFor, stripeEnabled } from "./payment-lib";
+import { isAllowedAssetUrl } from "@/lib/asset-url";
 import { cardBrand, DECLINE_CARD, expiryValid, luhnValid } from "@/components/store/checkout/card-utils";
 
-const safePath = z
-  .string()
-  .max(300)
-  .regex(/^\/(uploads|images)\/[\w\-./]+$/)
-  .refine((p) => !p.includes(".."));
+const safePath = z.string().max(300).refine(isAllowedAssetUrl, "Invalid file URL");
 
 const itemSchema = z.object({
   productId: z.string().min(1).max(64),

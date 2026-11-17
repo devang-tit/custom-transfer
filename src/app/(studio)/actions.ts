@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { isAllowedAssetUrl } from "@/lib/asset-url";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -9,11 +10,7 @@ const saveSchema = z.object({
   name: z.string().trim().min(1, "Give your design a name").max(80),
   kind: z.enum(["GANG_SHEET", "APPAREL"]),
   data: z.string().max(1_000_000, "Design is too large to save"),
-  previewUrl: z
-    .string()
-    .max(300)
-    .regex(/^\/(uploads|images)\//, "Invalid preview URL")
-    .nullish(),
+  previewUrl: z.string().max(300).refine(isAllowedAssetUrl, "Invalid preview URL").nullish(),
   widthIn: z.number().positive().max(1000).nullish(),
   heightIn: z.number().positive().max(1000).nullish(),
 });

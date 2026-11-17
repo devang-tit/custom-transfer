@@ -21,10 +21,10 @@ export async function searchProducts(q: string, take = 8): Promise<SearchHit[]> 
       ...(query
         ? {
             OR: [
-              { name: { contains: query } },
-              { shortDescription: { contains: query } },
-              { sku: { contains: query } },
-              { category: { name: { contains: query } } },
+              { name: { contains: query, mode: "insensitive" } },
+              { shortDescription: { contains: query, mode: "insensitive" } },
+              { sku: { contains: query, mode: "insensitive" } },
+              { category: { name: { contains: query, mode: "insensitive" } } },
             ],
           }
         : { featured: true }),

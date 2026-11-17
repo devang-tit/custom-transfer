@@ -1,6 +1,5 @@
 "use client";
 
-import { useActionState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Loader2, MailCheck } from "lucide-react";
 import { motion } from "motion/react";
@@ -8,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { forgotPasswordAction, type AuthState } from "@/lib/actions/auth";
 import { FormField, fieldInputClass } from "@/components/auth/form-field";
+import { useFormAction } from "@/components/auth/use-form-action";
 
 type State = (AuthState & { sent?: boolean }) | undefined;
 
 export function ForgotForm() {
-  const [state, formAction, pending] = useActionState<State, FormData>(forgotPasswordAction, undefined);
+  const { state, pending, onSubmit } = useFormAction<State>(forgotPasswordAction, undefined);
 
   if (state?.sent) {
     return (
@@ -23,7 +23,7 @@ export function ForgotForm() {
         <div className="grid gap-1.5">
           <h2 className="text-xl font-semibold">Check your inbox</h2>
           <p className="text-sm text-muted-foreground">
-            If an account exists for that email, we&apos;ve sent a link to reset your password. It expires in 30 minutes.
+            If an account exists for that email, we&apos;ve sent a link to reset your password. It expires in 1 hour. Check your spam folder if it doesn&apos;t arrive in a few minutes.
           </p>
         </div>
         <Button asChild variant="outline" className="h-11 rounded-xl">
@@ -36,7 +36,7 @@ export function ForgotForm() {
   }
 
   return (
-    <form action={formAction} className="grid gap-5" noValidate>
+    <form onSubmit={onSubmit} className="grid gap-5" noValidate>
       <FormField label="Email" htmlFor="email" error={state?.fieldErrors?.email}>
         <Input id="email" name="email" type="email" autoComplete="email" placeholder="you@company.com" className={fieldInputClass} aria-invalid={!!state?.fieldErrors?.email} />
       </FormField>

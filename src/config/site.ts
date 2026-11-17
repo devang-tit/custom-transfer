@@ -6,7 +6,10 @@ export const siteConfig = {
   tagline: "Custom DTF transfers & apparel printing",
   description:
     "Premium custom DTF transfers, gang sheets, UV DTF stickers and custom printed apparel. Upload your art, build a gang sheet online, and get vivid, wash-tested prints shipped fast.",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  // NEXT_PUBLIC_VERCEL_URL is set automatically on Vercel (used for preview deployments).
+  url:
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    (process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : "http://localhost:3000"),
   currency: "USD",
   locale: "en-US",
   contact: {

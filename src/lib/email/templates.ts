@@ -385,11 +385,43 @@ ${button(absoluteUrl(brand.siteUrl, "/admin/settings"), "Back to settings")}`;
   };
 }
 
+export function passwordResetEmail(brand: EmailBrand, opts: { name: string; url: string; minutes: number }): RenderedEmail {
+  const body = `
+${p(`Hi ${esc(firstName(opts.name))}, we got a request to reset the password for your ${esc(brand.storeName)} account.`)}
+${button(opts.url, "Choose a new password")}
+${p(`This link works once and expires in ${opts.minutes} minutes.`)}
+${noteBox("Didn't ask for this?", "You can safely ignore this email. Your password won't change unless you open the link and choose a new one.", C.cyan)}
+<p style="margin:20px 0 0;font-family:${FONT};font-size:12px;line-height:1.6;color:${C.muted};word-break:break-all">If the button doesn't work, paste this link into your browser:<br><a href="${esc(opts.url)}" style="color:${C.primary}">${esc(opts.url)}</a></p>`;
+  return {
+    subject: `Reset your ${brand.storeName} password`,
+    html: layout({ brand, preheader: `Use this link within ${opts.minutes} minutes to choose a new password.`, eyebrow: "Account security", title: "Reset your password", body }),
+    text: `Hi ${firstName(opts.name)}, we got a request to reset your ${brand.storeName} password.\n\nChoose a new password (link expires in ${opts.minutes} minutes, works once):\n${opts.url}\n\nDidn't ask for this? Ignore this email. Your password won't change.${textFooter(brand)}`,
+  };
+}
+
+export function passwordChangedEmail(brand: EmailBrand, opts: { name: string; when: Date; via: "reset" | "account"; forgotUrl: string }): RenderedEmail {
+  // dateStyle/timeStyle can't be combined with timeZoneName, so spell the fields out.
+  const when = opts.when.toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+  const how = opts.via === "reset" ? "using a password reset link" : "from your account settings";
+  const body = `
+${p(`Hi ${esc(firstName(opts.name))}, the password for your ${esc(brand.storeName)} account was changed ${how} on <strong>${esc(when)}</strong>.`)}
+${p("For your security, you've been signed out on your other devices.")}
+${noteBox("Wasn't you?", `Reset your password right away and contact us at <a href="mailto:${esc(brand.supportEmail)}" style="color:${C.primary}">${esc(brand.supportEmail)}</a>.`, C.magenta)}
+${button(opts.forgotUrl, "Reset password", C.magenta)}`;
+  return {
+    subject: `Your ${brand.storeName} password was changed`,
+    html: layout({ brand, preheader: "If this wasn't you, reset your password now.", eyebrow: "Account security", title: "Your password was changed", body }),
+    text: `Hi ${firstName(opts.name)}, the password for your ${brand.storeName} account was changed ${how} on ${when}. You've been signed out on other devices.\n\nWasn't you? Reset it now: ${opts.forgotUrl} and contact ${brand.supportEmail}.${textFooter(brand)}`,
+  };
+}
+
 export const EMAIL_TEMPLATE_LABELS: Record<string, string> = {
   order_confirmation: "Order confirmation",
   order_status: "Status update",
   artwork_changes: "Artwork changes",
   order_update: "Team update",
   admin_new_order: "New order alert",
+  password_reset: "Password reset",
+  password_changed: "Password changed",
   test: "Test email",
 };

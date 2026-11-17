@@ -33,7 +33,7 @@ export default async function OrdersPage({ searchParams }: PageProps<"/account/o
   const where: Prisma.OrderWhereInput = {
     ...base,
     ...(filter.statuses ? { status: { in: [...filter.statuses] } } : {}),
-    ...(q ? { OR: [{ number: { contains: q } }, { items: { some: { name: { contains: q } } } }] } : {}),
+    ...(q ? { OR: [{ number: { contains: q, mode: "insensitive" } }, { items: { some: { name: { contains: q, mode: "insensitive" } } } }] } : {}),
   };
 
   const [orders, counts] = await Promise.all([

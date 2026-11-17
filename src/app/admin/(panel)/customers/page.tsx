@@ -35,7 +35,7 @@ export default async function CustomersPage(props: PageProps<"/admin/customers">
     db.user.findMany({
       where: {
         ...(role !== "all" ? { role } : {}),
-        ...(params.q ? { OR: [{ name: { contains: params.q } }, { email: { contains: params.q } }, { company: { contains: params.q } }] } : {}),
+        ...(params.q ? { OR: [{ name: { contains: params.q, mode: "insensitive" } }, { email: { contains: params.q, mode: "insensitive" } }, { company: { contains: params.q, mode: "insensitive" } }] } : {}),
       },
       select: { id: true, name: true, email: true, company: true, role: true, createdAt: true, marketingOptIn: true },
     }),

@@ -5,7 +5,11 @@ const nextConfig: NextConfig = {
   cacheComponents: false,
   serverExternalPackages: ["nodemailer"],
   images: {
-    remotePatterns: [{ protocol: "https", hostname: "images.unsplash.com" }],
+    remotePatterns: [
+      { protocol: "https", hostname: "images.unsplash.com" },
+      // Customer uploads & product media stored in Vercel Blob
+      { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
+    ],
   },
   experimental: {
     serverActions: { bodySizeLimit: "25mb" },

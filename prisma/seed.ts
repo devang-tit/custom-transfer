@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { randomBytes } from "node:crypto";
 import { DEFAULT_SETTINGS, DEFAULT_TIERS, computeTotals, priceLine } from "../src/lib/pricing";
 import type { LineSelection, PriceTier, ProductOptions, PricingProduct } from "../src/lib/types";
 
@@ -447,10 +448,39 @@ const reviewTexts: [number, string, string][] = [
   [5, "Perfect for team uniforms", "Ordered 48 hoodies with names on the back. Everything was correct and packed by size."],
 ];
 
+/**
+ * Demo passwords are only used for local databases. On any remote database (e.g. Vercel
+ * Postgres) the admin password must come from SEED_ADMIN_PASSWORD, and the demo staff/customer
+ * accounts get random passwords unless SEED_STAFF_PASSWORD / SEED_CUSTOMER_PASSWORD are set.
+ */
+function resolvePasswords() {
+  const url = process.env.DATABASE_URL ?? "";
+  const local = url.startsWith("file:") || /@(localhost|127\.0\.0\.1)(:|\/)/.test(url);
+  const random = () => randomBytes(24).toString("base64url");
+  if (local) {
+    return { local, admin: "Admin@12345", staff: "Staff@12345", customer: "Customer@123" };
+  }
+  const admin = process.env.SEED_ADMIN_PASSWORD ?? "";
+  if (admin.length < 12) {
+    throw new Error("Refusing to seed a remote database without SEED_ADMIN_PASSWORD (12+ characters).");
+  }
+  return { local, admin, staff: process.env.SEED_STAFF_PASSWORD || random(), customer: process.env.SEED_CUSTOMER_PASSWORD || random() };
+}
+
 async function main() {
+  const onlyIfEmpty = process.argv.includes("--if-empty");
+  if (onlyIfEmpty) {
+    const existing = await db.user.count();
+    if (existing > 0) {
+      console.log(`Seed skipped: database already has ${existing} user(s).`);
+      return;
+    }
+  }
+  const pw = resolvePasswords();
   console.log("Resetting data…");
   await db.$transaction([
     db.emailLog.deleteMany(),
+    db.passwordResetToken.deleteMany(),
     db.orderEvent.deleteMany(),
     db.orderItem.deleteMany(),
     db.order.deleteMany(),
@@ -471,17 +501,17 @@ async function main() {
 
   console.log("Users…");
   const admin = await db.user.create({
-    data: { email: "admin@inkforge.test", name: "Jordan Admin", role: "ADMIN", passwordHash: await bcrypt.hash("Admin@12345", 10), company: "InkForge" },
+    data: { email: "admin@inkforge.test", name: "Jordan Admin", role: "ADMIN", passwordHash: await bcrypt.hash(pw.admin, 10), company: "InkForge" },
   });
   await db.user.create({
-    data: { email: "production@inkforge.test", name: "Sam Production", role: "STAFF", passwordHash: await bcrypt.hash("Staff@12345", 10), company: "InkForge" },
+    data: { email: "production@inkforge.test", name: "Sam Production", role: "STAFF", passwordHash: await bcrypt.hash(pw.staff, 10), company: "InkForge" },
   });
   const demo = await db.user.create({
     data: {
       email: "customer@inkforge.test",
       name: "Riley Customer",
       role: "CUSTOMER",
-      passwordHash: await bcrypt.hash("Customer@123", 10),
+      passwordHash: await bcrypt.hash(pw.customer, 10),
       company: "Riley's Print Shop",
       phone: "(512) 555-0199",
       marketingOptIn: true,
@@ -494,7 +524,7 @@ async function main() {
     },
   });
 
-  const customerHash = await bcrypt.hash("Customer@123", 10);
+  const customerHash = await bcrypt.hash(pw.customer, 10);
   const customers = [demo];
   for (let i = 0; i < 34; i++) {
     const first = pick(firstNames);
@@ -739,9 +769,14 @@ async function main() {
   });
 
   console.log(`\n✔ Seeded ${products.length} products, ${customers.length} customers, ${TOTAL_ORDERS} orders.`);
-  console.log("  Admin:    admin@inkforge.test / Admin@12345");
-  console.log("  Staff:    production@inkforge.test / Staff@12345");
-  console.log("  Customer: customer@inkforge.test / Customer@123");
+  if (pw.local) {
+    console.log("  Admin:    admin@inkforge.test / Admin@12345");
+    console.log("  Staff:    production@inkforge.test / Staff@12345");
+    console.log("  Customer: customer@inkforge.test / Customer@123");
+  } else {
+    // Never print real passwords (build logs are shared).
+    console.log("  Admin:    admin@inkforge.test (password from SEED_ADMIN_PASSWORD)");
+  }
   void admin;
 }
 

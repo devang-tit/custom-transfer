@@ -24,6 +24,7 @@ A full-stack e-commerce platform for a custom DTF transfer and t-shirt printing 
   - Stripe Checkout, or a built-in demo payment
 - **Order tracking:** look up an order by number + email.
 - **Order emails:** order confirmation, status updates (including a shipped email with a tracking link), artwork change requests and team updates.
+- **Password reset by email:** single-use links that expire after 1 hour, plus a "your password was changed" security notice.
 - **Customer account:**
   - dashboard, orders with timeline, artwork status and reorder
   - printable invoices, saved designs, wishlist, addresses, profile and password
@@ -50,7 +51,8 @@ A full-stack e-commerce platform for a custom DTF transfer and t-shirt printing 
 | --- | --- |
 | Framework | Next.js 16 (App Router, Server Actions, Turbopack), React 19, TypeScript |
 | UI | Tailwind CSS v4, shadcn/ui (Radix), lucide icons, Motion, Sonner |
-| Data | Prisma 6. SQLite by default, so switching to PostgreSQL or MySQL is a one-line change |
+| Data | Prisma 6 + PostgreSQL, with migrations in `prisma/migrations` |
+| Files | Vercel Blob in production; local disk in development |
 | Auth | JWT session cookie (jose) + bcrypt, role-based (CUSTOMER / STAFF / ADMIN), route protection in `src/proxy.ts` |
 | Editors | Konva / react-konva |
 | Charts | Recharts |
@@ -58,13 +60,14 @@ A full-stack e-commerce platform for a custom DTF transfer and t-shirt printing 
 
 ## Getting started
 
-Requires **Node.js 20.9+** (22 recommended).
+Requires **Node.js 20.9+** (22 recommended) and **PostgreSQL** (local or hosted).
 
 ```bash
 cd inkforge
 npm install
-cp .env.example .env        # then set AUTH_SECRET to a long random string
-npm run setup               # creates the database and loads demo data
+cp .env.example .env        # set AUTH_SECRET and DATABASE_URL (a local/dev Postgres)
+createdb inkforge           # or create the database any other way
+npm run setup               # applies migrations and loads demo data
 npm run dev                 # http://localhost:3000
 ```
 
@@ -86,8 +89,10 @@ Demo coupons: `WELCOME10`, `FREESHIP`, `BULK25`, `GANG15`.
 | `npm run dev` | Start the dev server |
 | `npm run build` / `npm start` | Production build / serve |
 | `npm run typecheck` | TypeScript check |
-| `npm run setup` | Create tables + seed demo data |
-| `npm run db:reset` | Wipe the database and re-seed |
+| `npm run setup` | Apply migrations + seed demo data |
+| `npm run db:migrate` | Create a migration after editing `schema.prisma` (dev database) |
+| `npm run db:reset` | Wipe the dev database, re-apply migrations and re-seed |
+| `npm run vercel-build` | What Vercel runs: migrate, seed if empty, build |
 | `npm run db:studio` | Open Prisma Studio to browse data |
 
 ## Configuration
@@ -96,7 +101,9 @@ Demo coupons: `WELCOME10`, `FREESHIP`, `BULK25`, `GANG15`.
 
 | Variable | Purpose |
 | --- | --- |
-| `DATABASE_URL` | Database connection (default `file:./dev.db`, SQLite) |
+| `DATABASE_URL` | PostgreSQL connection string. On Vercel it's provided by the Postgres integration |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob token for uploads. Set automatically when a Blob store is connected; leave empty locally |
+| `SEED_ADMIN_PASSWORD` | Admin password for the first seed of a remote database (demo passwords only work locally) |
 | `AUTH_SECRET` | Secret used to sign session cookies. **Required**, at least 16 characters |
 | `NEXT_PUBLIC_SITE_URL` | Public URL of the site (used for metadata and Stripe redirects) |
 | `STRIPE_SECRET_KEY` | Optional. Enables real Stripe Checkout |
@@ -104,10 +111,25 @@ Demo coupons: `WELCOME10`, `FREESHIP`, `BULK25`, `GANG15`.
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` | Optional. SMTP server for order emails. Without `SMTP_HOST`, emails go to the dev outbox |
 | `EMAIL_FROM` | Sender, e.g. `InkForge <orders@your-domain.com>` |
 
-### Switch to PostgreSQL or MySQL
-1. In `prisma/schema.prisma`, change `provider = "sqlite"` to `"postgresql"` or `"mysql"`.
-2. Set `DATABASE_URL`, for example `postgresql://user:pass@localhost:5432/inkforge`.
-3. Run `npm run setup`.
+### Deploying to Vercel
+The project builds with `npm run vercel-build`, which does four things in order:
+1. Generates the Prisma client.
+2. Applies migrations (`prisma migrate deploy`).
+3. Seeds the demo store, but only when the database is empty. The seed never touches a database that already has users.
+4. Runs `next build`.
+
+You need these on the Vercel project:
+- **Database:** a Postgres integration, which provides `DATABASE_URL`.
+- **Uploads:** a connected Blob store, which provides `BLOB_READ_WRITE_TOKEN`.
+- **Sign-in:** `AUTH_SECRET`.
+- **Links:** `NEXT_PUBLIC_SITE_URL`, your production URL.
+- **First seed:** `SEED_ADMIN_PASSWORD`. Delete it after the first deploy.
+
+On a remote database, the demo staff and customer accounts get random passwords, and the login page hides the demo-accounts box. To show that box on a demo site, set `NEXT_PUBLIC_SHOW_DEMO_ACCOUNTS=true`.
+
+**Schema changes:** edit `prisma/schema.prisma`, run `npm run db:migrate -- --name what-changed` against your dev database, then commit the new migration folder. The next deploy applies it.
+
+**Never point your local `.env` at the live database.** `npm run db:reset` wipes whatever `DATABASE_URL` points to.
 
 ### Enable Stripe
 1. Set `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`.
@@ -138,6 +160,8 @@ Then open **Admin → Settings → Email notifications** and click **Send test**
 | Status update | Staff change status with "notify customer" on, for the statuses you pick in Settings. Shipped includes the tracking link | Customer |
 | Artwork changes | Prepress marks artwork "needs changes", with the note | Customer |
 | Team update | Staff post an order note marked visible to the customer | Customer |
+| Password reset | Customer uses "Forgot password?" | Customer |
+| Password changed | Password reset or changed in the account settings | Customer |
 
 **How it behaves**
 - Status emails wait 10 seconds and are skipped if the status changed again, so an Undo on the production board never emails the customer.
@@ -145,8 +169,17 @@ Then open **Admin → Settings → Email notifications** and click **Send test**
 - Every attempt (sent, outbox or failed, with the error) appears in **Admin → Email log** and on the order page, where you can preview it or **Resend**.
 - **No SMTP configured (development):** emails are saved to `storage/emails/*.html` and the Email log instead of being sent.
 
+### Password reset
+1. **Request:** "Forgot password?" on the login page emails a reset link to `/reset-password?token=…`.
+2. **The link:** it works once and expires after 1 hour. Requesting a new link cancels older ones. Each account can request at most 3 links per hour.
+3. **What's stored:** only a SHA-256 hash of the token. The Email log keeps a copy with the link redacted, so staff can't use it. In dev outbox mode, the working link is in the `storage/emails/` file.
+4. **The form's reply:** it's the same whether or not an account exists, so it can't be used to find out which emails are registered.
+5. **After a reset:** the user is signed in, every other device is signed out, and a "your password was changed" email is sent. Changing the password from the account page does the same, but keeps the current device signed in.
+
+The password reset and password changed emails are always on. They aren't controlled by the notification toggles.
+
 ### Uploaded files
-Customer artwork and design previews are saved to `storage/uploads/` and served from `/uploads/...`. In production, put `storage/` on a persistent volume. For multi-server deployments, swap `src/app/api/upload/route.ts` for S3 or R2.
+Customer artwork, design previews and product images go through `/api/upload`. With `BLOB_READ_WRITE_TOKEN` set (on Vercel), they're stored in Vercel Blob and referenced by their public Blob URL. Without it (local development), they're saved to `storage/uploads/` and served from `/uploads/...`.
 
 ## Project structure
 
@@ -180,7 +213,7 @@ All prices are integer cents. `src/lib/pricing.ts` is shared by the browser, for
 ## Known limitations / next steps
 
 - **Print files:** orders store a preview PNG plus the full design layout (positions in inches + source image URLs) for gang sheets and studio designs. A server-side job that renders the 300 DPI print-ready file from that layout is the natural next step for prepress.
-- **Email:** order emails are sent (see above). Password-reset emails and contact-form auto-replies aren't built yet: forgot-password is demo-only, and inbox replies open your mail app.
+- **Email:** order and password emails are sent (see above). Contact-form auto-replies aren't built yet, and inbox replies open your mail app.
 - **Refunds:** refund and cancel in admin update the order only; they don't call Stripe.
 - **Gang sheet packing** uses bounding boxes (rectangles), not true shape nesting. PDF uploads can be ordered as files but not placed on the canvas.
-- **Postgres:** admin search relies on SQLite's case-insensitive `contains`. On Postgres, add `mode: "insensitive"` to those Prisma filters.
+- **Stripe webhook:** add a webhook endpoint in Stripe for `https://<your-domain>/api/stripe/webhook` and set `STRIPE_WEBHOOK_SECRET`. Until then, orders are marked paid when the customer returns to the success page after paying, and a customer who closes the tab first leaves the order unpaid.

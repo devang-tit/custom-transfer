@@ -4,7 +4,8 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { requireUser } from "@/lib/auth";
+import { createSession, requireUser } from "@/lib/auth";
+import { notifyPasswordChanged } from "@/lib/email/notify";
 import { parseJson } from "@/lib/json";
 import { priceLine } from "@/lib/pricing";
 import { toPricingProduct, toProductDTO, productImage } from "@/lib/products";
@@ -57,8 +58,15 @@ export async function changePasswordAction(_prev: FormState, formData: FormData)
   if (!row || !(await bcrypt.compare(parsed.data.currentPassword, row.passwordHash))) {
     return { fieldErrors: { currentPassword: ["Current password is incorrect"] } };
   }
-  await db.user.update({ where: { id: user.id }, data: { passwordHash: await bcrypt.hash(parsed.data.newPassword, 10) } });
-  return { ok: true, message: "Password changed" };
+  const updated = await db.user.update({
+    where: { id: user.id },
+    data: { passwordHash: await bcrypt.hash(parsed.data.newPassword, 10), passwordChangedAt: new Date() },
+    select: { id: true, email: true, name: true, role: true, passwordChangedAt: true },
+  });
+  // Signs out other devices (their sessions predate passwordChangedAt) but keeps this one.
+  await createSession(updated);
+  notifyPasswordChanged(user.id, "account");
+  return { ok: true, message: "Password changed. Other devices have been signed out" };
 }
 
 /* ---------------- Addresses ---------------- */

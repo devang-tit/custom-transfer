@@ -39,10 +39,10 @@ export function orderWhereBase(p: OrderFilterParams): Prisma.OrderWhereInput {
   if (p.q) {
     and.push({
       OR: [
-        { number: { contains: p.q } },
-        { email: { contains: p.q } },
-        { customerName: { contains: p.q } },
-        { trackingNumber: { contains: p.q } },
+        { number: { contains: p.q, mode: "insensitive" } },
+        { email: { contains: p.q, mode: "insensitive" } },
+        { customerName: { contains: p.q, mode: "insensitive" } },
+        { trackingNumber: { contains: p.q, mode: "insensitive" } },
       ],
     });
   }

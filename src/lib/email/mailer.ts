@@ -58,6 +58,11 @@ function getTransport(): Transporter {
 export async function sendMail(input: MailInput): Promise<MailResult> {
   const { mode } = emailTransportInfo();
   if (mode === "outbox") {
+    // Serverless hosts (Vercel) have a read-only filesystem: keep the email in the EmailLog only.
+    if (process.env.VERCEL) {
+      console.info(`[email:outbox] to=${input.to} subject="${input.subject}" (no SMTP configured; saved to Email log only)`);
+      return { status: "OUTBOX" };
+    }
     try {
       await mkdir(OUTBOX_DIR, { recursive: true });
       const slug = input.subject.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
