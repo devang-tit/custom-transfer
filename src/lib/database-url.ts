@@ -7,7 +7,7 @@
  *
  * Serverless functions scale out to many instances, each with its own Prisma pool, so
  * pointing them at the direct URL exhausts its cap ("too many connections for role …").
- * App traffic therefore goes through the pooler with one connection per instance, and
+ * App traffic therefore goes through the pooler with a small pool per instance, and
  * prepared statements are off (pgbouncer=true) so transaction-mode pooling works.
  * Migrations keep using DATABASE_URL via schema.prisma. Without a pooled URL (local
  * development), DATABASE_URL is used as-is plus timeouts.
@@ -23,7 +23,8 @@ export function appDatabaseUrl(env: NodeJS.ProcessEnv = process.env): string | u
     };
     if (pooled) {
       set("pgbouncer", "true");
-      set("connection_limit", "1");
+      // Fluid compute serves many requests per instance; the pooler multiplexes, so allow a few.
+      set("connection_limit", "5");
     }
     set("pool_timeout", "20");
     set("connect_timeout", "15");
