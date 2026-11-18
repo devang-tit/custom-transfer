@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { createSession, requireUser } from "@/lib/auth";
 import { notifyPasswordChanged } from "@/lib/email/notify";
 import { parseJson } from "@/lib/json";
+import { findState, isValidPin, normalizeIndianMobile } from "@/lib/india";
 import { priceLine } from "@/lib/pricing";
 import { toPricingProduct, toProductDTO, productImage } from "@/lib/products";
 import type { LineSelection } from "@/lib/types";
@@ -79,10 +80,17 @@ const addressSchema = z.object({
   line1: z.string().trim().min(3, "Enter a street address"),
   line2: optional,
   city: z.string().trim().min(2, "Enter a city"),
-  state: z.string().trim().min(2, "Enter a state"),
-  zip: z.string().trim().regex(/^[A-Za-z0-9 -]{3,10}$/, "Enter a valid ZIP / postal code"),
-  country: z.string().trim().min(2).default("US"),
-  phone: optional,
+  state: z.string().trim().refine((v) => !!findState(v), "Choose your state"),
+  zip: z.string().trim().refine(isValidPin, "Enter a valid 6-digit PIN code"),
+  country: z.literal("IN").default("IN"),
+  phone: z
+    .string()
+    .trim()
+    .transform((v, ctx) => {
+      const n = normalizeIndianMobile(v);
+      if (!n) ctx.addIssue({ code: "custom", message: "Enter a valid 10-digit mobile number" });
+      return n ?? v;
+    }),
   isDefault: z.string().optional(),
 });
 

@@ -104,7 +104,7 @@ export function CartView({ settings }: { settings: StoreSettings }) {
                 })}
               </div>
             </div>
-            <TotalsTable totals={totals} estimate taxRate={settings.taxRate} />
+            <TotalsTable totals={totals} estimate />
             <Button asChild className="h-12 w-full rounded-xl text-base shadow-glow">
               <Link href="/checkout"><Lock className="size-4" /> Checkout securely <ArrowRight className="size-4" /></Link>
             </Button>
@@ -112,7 +112,7 @@ export function CartView({ settings }: { settings: StoreSettings }) {
           </div>
           <ul className="mt-4 space-y-2 px-2 text-xs text-muted-foreground">
             <li className="flex items-center gap-2"><ShieldCheck className="size-4 text-primary" /> Every file checked by a human before printing</li>
-            <li className="flex items-center gap-2"><Truck className="size-4 text-primary" /> Same-day production on orders before 2pm CT</li>
+            <li className="flex items-center gap-2"><Truck className="size-4 text-primary" /> Same-day production on orders before 2 pm IST</li>
           </ul>
         </aside>
       </div>

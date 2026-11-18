@@ -25,7 +25,7 @@ import {
 /**
  * Order notification service.
  *
- * Call sites (checkout, Stripe webhook, admin actions) use the `notify*` functions, which
+ * Call sites (checkout, Razorpay webhook, admin actions) use the `notify*` functions, which
  * schedule work with `after()` so a slow mail server never delays the response. Every
  * attempt is recorded in EmailLog (visible in Admin → Email log and on the order page).
  */
@@ -97,7 +97,11 @@ function toEmailOrder(order: LoadedOrder, settings: StoreSettings): EmailOrder {
     couponCode: order.couponCode,
     shipping: order.shipping,
     rushFee: order.rushFee,
+    codFee: order.codFee,
     tax: order.tax,
+    taxIncluded: settings.pricesIncludeTax,
+    paymentMethod: order.paymentMethod,
+    paid: order.paymentStatus === "PAID",
     total: order.total,
     isRush: order.isRush,
     carrier: order.carrier,

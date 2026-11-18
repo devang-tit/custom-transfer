@@ -9,14 +9,15 @@ import { getSession } from "@/lib/auth";
 import { getSettings } from "@/lib/settings";
 import { generateOrderNumber } from "@/lib/orders";
 import { computeTotals, priceLine } from "@/lib/pricing";
+import { formatMoney } from "@/lib/format";
 import { notifyOrderPaid } from "@/lib/email/notify";
 import { toJson } from "@/lib/json";
 import { toProductDTO, toPricingProduct, productImage } from "@/lib/products";
-import { siteConfig } from "@/config/site";
+import { findState, isValidGstin, isValidPin, normalizeIndianMobile } from "@/lib/india";
+import { createRazorpayOrder, razorpayEnabled, razorpayKeyId, verifyPaymentSignature } from "@/lib/razorpay";
 import { findValidCoupon } from "./coupon-lib";
-import { getStripe, paidStatusFor, stripeEnabled } from "./payment-lib";
+import { markOrderPaid, paidStatusFor } from "./payment-lib";
 import { isAllowedAssetUrl } from "@/lib/asset-url";
-import { cardBrand, DECLINE_CARD, expiryValid, luhnValid } from "@/components/store/checkout/card-utils";
 
 const safePath = z.string().max(300).refine(isAllowedAssetUrl, "Invalid file URL");
 
@@ -37,11 +38,20 @@ const itemSchema = z.object({
   notes: z.string().max(500).optional(),
 });
 
+const mobile = z
+  .string()
+  .trim()
+  .transform((v, ctx) => {
+    const n = normalizeIndianMobile(v);
+    if (!n) ctx.addIssue({ code: "custom", message: "Enter a valid 10-digit mobile number" });
+    return n ?? v;
+  });
+
 const schema = z.object({
   contact: z.object({
     email: z.email("Enter a valid email").transform((v) => v.trim().toLowerCase()),
     name: z.string().trim().min(2, "Enter your full name").max(120),
-    phone: z.string().trim().max(40).optional(),
+    phone: mobile,
   }),
   address: z.object({
     name: z.string().trim().min(2, "Required").max(120),
@@ -49,25 +59,43 @@ const schema = z.object({
     line1: z.string().trim().min(3, "Required").max(200),
     line2: z.string().trim().max(200).optional(),
     city: z.string().trim().min(2, "Required").max(100),
-    state: z.string().trim().min(2, "Required").max(60),
-    zip: z.string().trim().min(3, "Required").max(20),
-    country: z.string().trim().length(2),
+    state: z.string().trim().refine((v) => !!findState(v), "Choose your state"),
+    zip: z.string().trim().refine(isValidPin, "Enter a valid 6-digit PIN code"),
+    country: z.literal("IN"),
+    phone: z.string().trim().max(20).optional(),
   }),
+  gstin: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .optional()
+    .refine((v) => !v || isValidGstin(v), "Enter a valid 15-character GSTIN"),
   shippingMethod: z.string().max(40),
   rush: z.boolean(),
   notes: z.string().trim().max(1000).optional(),
   couponCode: z.string().trim().max(40).optional(),
   items: z.array(itemSchema).min(1, "Your cart is empty").max(50),
-  payment: z.object({
-    method: z.enum(["demo", "stripe"]),
-    cardNumber: z.string().max(30).optional(),
-    expiry: z.string().max(10).optional(),
-    cvc: z.string().max(4).optional(),
-  }),
+  payment: z.object({ method: z.enum(["razorpay", "cod", "demo"]) }),
 });
 
 export type CheckoutPayload = z.input<typeof schema>;
-export type PlaceOrderResult = { ok: true; url: string; external?: boolean } | { ok: false; error: string; field?: string };
+
+/** What the browser needs to open Razorpay Checkout. */
+export type RazorpayCheckout = {
+  keyId: string;
+  orderId: string;
+  amount: number;
+  currency: "INR";
+  orderNumber: string;
+  name: string;
+  description: string;
+  prefill: { name: string; email: string; contact: string };
+};
+
+export type PlaceOrderResult =
+  | { ok: true; url: string }
+  | { ok: true; razorpay: RazorpayCheckout }
+  | { ok: false; error: string; field?: string };
 
 export async function placeOrder(payload: CheckoutPayload): Promise<PlaceOrderResult> {
   const parsed = schema.safeParse(payload);
@@ -77,6 +105,11 @@ export async function placeOrder(payload: CheckoutPayload): Promise<PlaceOrderRe
   }
   const input = parsed.data;
   const [session, settings] = await Promise.all([getSession(), getSettings()]);
+  const method = input.payment.method;
+  const online = razorpayEnabled();
+  if (method === "razorpay" && !online) return { ok: false, error: "Online payment isn’t available right now.", field: "payment.method" };
+  if (method === "demo" && online) return { ok: false, error: "Choose a payment method.", field: "payment.method" };
+  if (method === "cod" && !settings.codEnabled) return { ok: false, error: "Cash on Delivery isn’t available.", field: "payment.method" };
 
   // ---- Re-price every line from the database (never trust client prices) ----
   const ids = [...new Set(input.items.map((i) => i.productId))];
@@ -87,7 +120,7 @@ export async function placeOrder(payload: CheckoutPayload): Promise<PlaceOrderRe
     designIds.length ? (await db.savedDesign.findMany({ where: { id: { in: designIds } }, select: { id: true } })).map((d) => d.id) : []
   );
 
-  const lines: (Prisma.OrderItemCreateWithoutOrderInput & { artworkUrl: string | null; designId: string | null })[] = [];
+  const lines: (Prisma.OrderItemCreateWithoutOrderInput & { artworkUrl: string | null; designId: string | null; gstRate: number })[] = [];
   const stockNeed = new Map<string, number>();
   for (const item of input.items) {
     const product = products.get(item.productId);
@@ -132,6 +165,8 @@ export async function placeOrder(payload: CheckoutPayload): Promise<PlaceOrderRe
       designId,
       artworkStatus: needsArt ? "PENDING" : "APPROVED",
       artworkNote: item.notes?.trim() || null,
+      hsnCode: product.hsnCode,
+      gstRate: product.gstRate ?? settings.taxRate,
     });
   }
   for (const [id, need] of stockNeed) {
@@ -147,23 +182,25 @@ export async function placeOrder(payload: CheckoutPayload): Promise<PlaceOrderRe
     coupon = res.coupon;
   }
   if (!settings.shippingMethods.some((m) => m.id === input.shippingMethod)) return { ok: false, error: "Choose a delivery method.", field: "shippingMethod" };
-  const totals = computeTotals({ subtotal, settings, shippingMethodId: input.shippingMethod, coupon, rush: input.rush });
-
-  // ---- Payment pre-checks ----
-  const useStripe = input.payment.method === "stripe" && stripeEnabled();
-  if (!useStripe) {
-    const num = (input.payment.cardNumber ?? "").replace(/\D/g, "");
-    if (!luhnValid(num)) return { ok: false, error: "That card number doesn’t look right.", field: "payment.cardNumber" };
-    if (!expiryValid(input.payment.expiry ?? "")) return { ok: false, error: "Check the card expiry date.", field: "payment.expiry" };
-    if (!/^\d{3,4}$/.test(input.payment.cvc ?? "")) return { ok: false, error: "Enter the 3–4 digit security code.", field: "payment.cvc" };
-    if (num === DECLINE_CARD) return { ok: false, error: "Your card was declined. Try another card.", field: "payment.cardNumber" };
+  const totals = computeTotals({
+    subtotal,
+    settings,
+    shippingMethodId: input.shippingMethod,
+    coupon,
+    rush: input.rush,
+    cod: method === "cod",
+    lines: lines.map((l) => ({ amount: l.total as number, gstRate: l.gstRate })),
+  });
+  if (method === "cod" && totals.total > settings.codMaxOrder) {
+    return { ok: false, error: `Cash on Delivery is available for orders up to ${formatMoney(settings.codMaxOrder)}. Please pay online.`, field: "payment.method" };
   }
 
   const number = await generateOrderNumber(settings.orderPrefix);
-  const paidNow = !useStripe;
-  const paidStatus = paidStatusFor(lines);
+  const confirmedNow = method !== "razorpay"; // demo is paid now; COD goes straight to production, paid on delivery
+  const paidNow = method === "demo";
+  const nextStatus = paidStatusFor(lines);
   const now = Date.now();
-  const card = (input.payment.cardNumber ?? "").replace(/\D/g, "");
+  const state = findState(input.address.state)!;
 
   const order = await db.$transaction(async (tx) => {
     const created = await tx.order.create({
@@ -172,31 +209,40 @@ export async function placeOrder(payload: CheckoutPayload): Promise<PlaceOrderRe
         userId: session?.sub ?? null,
         email: input.contact.email,
         customerName: input.contact.name,
-        phone: input.contact.phone || null,
-        status: paidNow ? paidStatus : "PENDING",
+        phone: input.contact.phone,
+        status: confirmedNow ? nextStatus : "PENDING",
         paymentStatus: paidNow ? "PAID" : "UNPAID",
-        paymentMethod: useStripe ? "stripe" : "card",
-        paymentRef: paidNow ? `demo_${cardBrand(card).toLowerCase()}_${card.slice(-4)}` : null,
+        paymentMethod: method,
+        paymentRef: paidNow ? `demo_${Date.now().toString(36)}` : null,
         shippingMethod: input.shippingMethod,
-        shippingAddress: toJson(input.address),
+        shippingAddress: toJson({ ...input.address, state: state.name, phone: input.address.phone || input.contact.phone }),
         subtotal: totals.subtotal,
         discount: totals.discount,
         shipping: totals.shipping,
         rushFee: totals.rushFee,
+        codFee: totals.codFee,
         tax: totals.tax,
         total: totals.total,
         couponCode: coupon?.code ?? null,
+        customerGstin: input.gstin || null,
         isRush: input.rush,
         notes: input.notes || null,
         items: { create: lines },
         events: {
           create: [
-            { status: "PENDING", message: "Order placed", author: "customer", createdAt: new Date(now) },
-            ...(paidNow
+            { status: "PENDING", message: method === "cod" ? "Order placed · Cash on Delivery" : "Order placed", author: "customer", createdAt: new Date(now) },
+            ...(confirmedNow
               ? [
                   {
-                    status: paidStatus,
-                    message: paidStatus === "ARTWORK_REVIEW" ? "Payment received — artwork sent to prepress review" : "Payment received — queued for production",
+                    status: nextStatus,
+                    message:
+                      method === "cod"
+                        ? nextStatus === "ARTWORK_REVIEW"
+                          ? "COD order confirmed — artwork sent to prepress review"
+                          : "COD order confirmed — queued for production"
+                        : nextStatus === "ARTWORK_REVIEW"
+                          ? "Payment received — artwork sent to prepress review"
+                          : "Payment received — queued for production",
                     author: "system",
                     createdAt: new Date(now + 1000),
                   },
@@ -211,37 +257,31 @@ export async function placeOrder(payload: CheckoutPayload): Promise<PlaceOrderRe
     return created;
   });
 
-  // Receipt + store alert (sent after the response; Stripe orders notify from the webhook instead).
-  if (paidNow) notifyOrderPaid(order.id);
-
   const jar = await cookies();
   jar.set("if_last_order", order.number, { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24, secure: process.env.NODE_ENV === "production" });
   revalidatePath("/account/orders");
   revalidatePath("/admin");
 
-  if (useStripe) {
+  // Receipt + store alert for confirmed orders (Razorpay orders notify once payment is verified).
+  if (confirmedNow) notifyOrderPaid(order.id);
+
+  if (method === "razorpay") {
     try {
-      const base = siteConfig.url.replace(/\/$/, "");
-      const s = await getStripe().checkout.sessions.create({
-        mode: "payment",
-        customer_email: order.email,
-        client_reference_id: order.id,
-        metadata: { orderId: order.id, orderNumber: order.number },
-        line_items: [
-          {
-            quantity: 1,
-            price_data: {
-              currency: siteConfig.currency.toLowerCase(),
-              unit_amount: order.total,
-              product_data: { name: `${settings.storeName} order ${order.number}`, description: `${lines.length} item${lines.length > 1 ? "s" : ""}` },
-            },
-          },
-        ],
-        success_url: `${base}/checkout/success?order=${order.number}&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${base}/checkout?canceled=${order.number}`,
-      });
-      await db.order.update({ where: { id: order.id }, data: { paymentRef: s.id } });
-      return { ok: true, url: s.url!, external: true };
+      const rzp = await createRazorpayOrder({ amount: order.total, receipt: order.number, notes: { orderId: order.id, orderNumber: order.number } });
+      await db.order.update({ where: { id: order.id }, data: { paymentRef: rzp.id } });
+      return {
+        ok: true,
+        razorpay: {
+          keyId: razorpayKeyId(),
+          orderId: rzp.id,
+          amount: order.total,
+          currency: "INR",
+          orderNumber: order.number,
+          name: settings.storeName,
+          description: `Order ${order.number}`,
+          prefill: { name: input.contact.name, email: input.contact.email, contact: input.contact.phone.replace(/\s/g, "") },
+        },
+      };
     } catch (e) {
       // Roll back reservations so the customer can retry.
       await db.$transaction(async (tx) => {
@@ -249,9 +289,31 @@ export async function placeOrder(payload: CheckoutPayload): Promise<PlaceOrderRe
         for (const [id, need] of stockNeed) await tx.product.update({ where: { id }, data: { stock: { increment: need } } });
         await tx.order.delete({ where: { id: order.id } });
       });
-      console.error("Stripe session error", e);
-      return { ok: false, error: "We couldn’t start the secure payment. Please try again." };
+      console.error("Razorpay order error", e);
+      return { ok: false, error: "We couldn’t start the secure payment. Please try again or choose Cash on Delivery." };
     }
   }
   return { ok: true, url: `/checkout/success?order=${order.number}` };
+}
+
+const confirmSchema = z.object({
+  orderNumber: z.string().min(1).max(30),
+  razorpayOrderId: z.string().min(1).max(64),
+  razorpayPaymentId: z.string().min(1).max(64),
+  razorpaySignature: z.string().min(1).max(256),
+});
+
+/** Called by the browser after Razorpay Checkout succeeds: verifies the signature and marks the order paid. */
+export async function confirmRazorpayPayment(input: z.input<typeof confirmSchema>): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  const parsed = confirmSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Invalid payment response" };
+  const { orderNumber, razorpayOrderId, razorpayPaymentId, razorpaySignature } = parsed.data;
+  const order = await db.order.findUnique({ where: { number: orderNumber }, select: { id: true, paymentRef: true } });
+  if (!order || order.paymentRef !== razorpayOrderId) return { ok: false, error: "Order not found" };
+  if (!verifyPaymentSignature(razorpayOrderId, razorpayPaymentId, razorpaySignature)) {
+    return { ok: false, error: "We couldn’t verify this payment. If money was deducted, it will be confirmed shortly or refunded." };
+  }
+  await markOrderPaid(order.id, razorpayOrderId);
+  revalidatePath("/account/orders");
+  return { ok: true, url: `/checkout/success?order=${orderNumber}` };
 }

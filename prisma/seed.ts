@@ -19,8 +19,8 @@ const J = (v: unknown) => JSON.stringify(v);
 
 const transferFinishes = [
   { id: "standard", label: "Standard", price: 0, description: "Vivid full-color DTF" },
-  { id: "glitter", label: "Glitter", price: 100, description: "Sparkle flake top layer" },
-  { id: "glow", label: "Glow in the dark", price: 150, description: "Charges in light, glows green" },
+  { id: "glitter", label: "Glitter", price: 1500, description: "Sparkle flake top layer" },
+  { id: "glow", label: "Glow in the dark", price: 2000, description: "Charges in light, glows green" },
 ];
 const sq = (w: number, h: number, price: number) => ({ id: `${w}x${h}`, label: `${w}" × ${h}"`, width: w, height: h, price });
 const gang = (h: number, price: number) => ({ id: `22x${h}`, label: `22" × ${h}"`, width: 22, height: h, price });
@@ -31,14 +31,14 @@ const apparelSizes = [
   { size: "M", upcharge: 0 },
   { size: "L", upcharge: 0 },
   { size: "XL", upcharge: 0 },
-  { size: "2XL", upcharge: 200 },
-  { size: "3XL", upcharge: 300 },
+  { size: "2XL", upcharge: 4000 },
+  { size: "3XL", upcharge: 6000 },
 ];
 const printLocations = [
-  { id: "front", label: "Full front", price: 550 },
-  { id: "back", label: "Full back", price: 550 },
-  { id: "left-chest", label: "Left chest", price: 350 },
-  { id: "sleeve", label: "Sleeve", price: 300 },
+  { id: "front", label: "Full front", price: 12000 },
+  { id: "back", label: "Full back", price: 12000 },
+  { id: "left-chest", label: "Left chest", price: 6000 },
+  { id: "sleeve", label: "Sleeve", price: 5000 },
 ];
 const colors = [
   { name: "White", hex: "#F7F7F5" },
@@ -79,6 +79,8 @@ type SeedProduct = {
   tiers: PriceTier[];
   features: string[];
   badge?: string;
+  hsnCode: string;
+  gstRate: number;
   turnaround?: string;
   stock?: number;
   featured?: boolean;
@@ -98,16 +100,18 @@ const products: SeedProduct[] = [
     name: "Custom DTF Transfers by Size",
     slug: "custom-dtf-transfers",
     sku: "DTF-SIZE",
+    hsnCode: "4908",
+    gstRate: 18,
     type: "DTF_TRANSFER",
     category: "dtf-transfers",
     shortDescription: "Upload any design and pick a size. Vibrant, stretchy, wash-tested transfers ready to press.",
     description:
-      "Our flagship direct-to-film transfers are printed on premium PET film with eco-friendly water-based inks and a hot-melt adhesive powder. They press onto cotton, polyester, blends, canvas, denim and more — light or dark garments, no weeding required.\n\nEvery transfer is cured and quality-checked before shipping. Simply press at 300–315°F for 10–15 seconds with medium pressure, then peel hot or cold.",
+      "Our flagship direct-to-film transfers are printed on premium PET film with eco-friendly water-based inks and a hot-melt adhesive powder. They press onto cotton, polyester, blends, canvas, denim and more — light or dark garments, no weeding required.\n\nEvery transfer is cured and quality-checked before shipping. Simply press at 150–160°C (300–315°F) for 10–15 seconds with medium pressure, then peel hot or cold.",
     images: [img("dtf-transfers.svg"), img("tee-white.svg"), img("tee-black.svg")],
-    basePrice: 149,
+    basePrice: 2500,
     options: {
       requiresArtwork: true,
-      sizes: [sq(3, 3, 149), sq(4, 4, 199), sq(5, 5, 279), sq(6, 6, 349), sq(8, 8, 499), sq(10, 10, 649), sq(11, 11, 749), sq(12, 12, 899), sq(12, 17, 1199)],
+      sizes: [sq(3, 3, 2500), sq(4, 4, 3500), sq(5, 5, 4900), sq(6, 6, 6500), sq(8, 8, 9900), sq(10, 10, 13900), sq(11, 11, 15900), sq(12, 12, 18900), sq(12, 17, 24900)],
       finishes: transferFinishes,
     },
     tiers: DEFAULT_TIERS,
@@ -120,14 +124,16 @@ const products: SeedProduct[] = [
     name: "Left Chest & Pocket Transfers",
     slug: "left-chest-dtf-transfers",
     sku: "DTF-LC",
+    hsnCode: "4908",
+    gstRate: 18,
     type: "DTF_TRANSFER",
     category: "dtf-transfers",
     shortDescription: "Small-format transfers perfect for logos, pocket prints, hats and sleeves.",
     description:
       "Built for brands and uniform programs. Left chest transfers keep fine detail crisp at small sizes and press perfectly on polos, hats, totes and sleeves.",
     images: [img("dtf-left-chest.svg"), img("tee-oversized.svg")],
-    basePrice: 89,
-    options: { requiresArtwork: true, sizes: [sq(2, 2, 89), sq(3, 3, 119), sq(3.5, 3.5, 139), sq(4, 4, 159)], finishes: transferFinishes.slice(0, 2) },
+    basePrice: 1500,
+    options: { requiresArtwork: true, sizes: [sq(2, 2, 1500), sq(3, 3, 2200), sq(3.5, 3.5, 2800), sq(4, 4, 3200)], finishes: transferFinishes.slice(0, 2) },
     tiers: DEFAULT_TIERS,
     features: ["Crisp detail down to 0.5pt lines", "Great for hats & polos", "Bulk pricing from 10 pcs"],
     turnaround: "Ships in 24 hours",
@@ -136,14 +142,16 @@ const products: SeedProduct[] = [
     name: "Glitter DTF Transfers",
     slug: "glitter-dtf-transfers",
     sku: "DTF-GLT",
+    hsnCode: "4908",
+    gstRate: 18,
     type: "DTF_TRANSFER",
     category: "dtf-transfers",
     shortDescription: "Full-color prints with a dazzling glitter top coat. Built to turn heads.",
     description: "A sparkle flake layer is fused over your full-color print, giving every design a premium shimmer that survives the wash.",
     images: [img("dtf-glitter.svg"), img("tee-black.svg")],
-    basePrice: 249,
-    compareAtPrice: 299,
-    options: { requiresArtwork: true, sizes: [sq(4, 4, 249), sq(6, 6, 449), sq(8, 8, 599), sq(10, 10, 799), sq(12, 12, 1049)] },
+    basePrice: 5500,
+    compareAtPrice: 6900,
+    options: { requiresArtwork: true, sizes: [sq(4, 4, 5500), sq(6, 6, 9500), sq(8, 8, 13500), sq(10, 10, 17900), sq(12, 12, 22900)] },
     tiers: DEFAULT_TIERS,
     features: ["Holographic sparkle finish", "Soft, flexible hand", "Works on cotton & poly"],
     badge: "New",
@@ -154,13 +162,15 @@ const products: SeedProduct[] = [
     name: "Glow-in-the-Dark DTF Transfers",
     slug: "glow-dtf-transfers",
     sku: "DTF-GLW",
+    hsnCode: "4908",
+    gstRate: 18,
     type: "DTF_TRANSFER",
     category: "dtf-transfers",
     shortDescription: "Charges in light and glows vivid green in the dark. Perfect for events & Halloween.",
     description: "Luminous pigment layered behind your print for a design that pops by day and glows at night.",
     images: [img("dtf-glow.svg")],
-    basePrice: 299,
-    options: { requiresArtwork: true, sizes: [sq(4, 4, 299), sq(6, 6, 499), sq(8, 8, 649), sq(10, 10, 849), sq(12, 12, 1099)] },
+    basePrice: 6500,
+    options: { requiresArtwork: true, sizes: [sq(4, 4, 6500), sq(6, 6, 10900), sq(8, 8, 14900), sq(10, 10, 19900), sq(12, 12, 25900)] },
     tiers: DEFAULT_TIERS,
     features: ["Glows up to 4 hours", "Full-color daytime print", "Great for events"],
     turnaround: "Ships in 48 hours",
@@ -169,13 +179,15 @@ const products: SeedProduct[] = [
     name: "Neck Label Transfers",
     slug: "neck-label-transfers",
     sku: "DTF-NECK",
+    hsnCode: "4908",
+    gstRate: 18,
     type: "DTF_TRANSFER",
     category: "dtf-transfers",
     shortDescription: "Tagless neck labels for your clothing brand — size, care and logo in one press.",
     description: "Ditch scratchy tags. Brand-ready neck labels printed with fine detail and a soft, flexible hand.",
     images: [img("dtf-neck-label.svg")],
-    basePrice: 59,
-    options: { requiresArtwork: true, sizes: [sq(2, 2, 59), { id: "3x2", label: '3" × 2"', width: 3, height: 2, price: 69 }, sq(3, 3, 79)] },
+    basePrice: 900,
+    options: { requiresArtwork: true, sizes: [sq(2, 2, 900), { id: "3x2", label: '3" × 2"', width: 3, height: 2, price: 1200 }, sq(3, 3, 1500)] },
     tiers: [
       { minQty: 1, discountPct: 0 },
       { minQty: 50, discountPct: 15 },
@@ -189,19 +201,21 @@ const products: SeedProduct[] = [
     name: "DTF Gang Sheet Builder",
     slug: "dtf-gang-sheet",
     sku: "GANG-DTF",
+    hsnCode: "4908",
+    gstRate: 18,
     type: "GANG_SHEET",
     category: "gang-sheets",
     shortDescription: "Pack unlimited designs onto one 22\" wide sheet. Build it online with auto-nesting or upload your file.",
     description:
       "The most cost-effective way to print DTF. Arrange as many designs as fit on a 22\" wide sheet — mix sizes, colors and logos freely. Use our online builder with smart auto-pack and DPI checks, or upload a print-ready 300 DPI transparent PNG.",
     images: [img("gang-sheet.svg"), img("dtf-transfers.svg")],
-    basePrice: 699,
+    basePrice: 19900,
     options: {
       requiresArtwork: true,
-      sizes: [gang(12, 699), gang(24, 1199), gang(36, 1699), gang(48, 2199), gang(60, 2699), gang(84, 3699), gang(120, 4999), gang(180, 7299), gang(240, 9499)],
+      sizes: [gang(12, 19900), gang(24, 34900), gang(36, 49900), gang(48, 64900), gang(60, 79900), gang(84, 109900), gang(120, 149900), gang(180, 219900), gang(240, 289900)],
     },
     tiers: gangTiers,
-    features: ["Unlimited designs per sheet", "Smart auto-pack builder", "Live DPI quality check", "Same-day production before 2pm"],
+    features: ["Unlimited designs per sheet", "Smart auto-pack builder", "Live DPI quality check", "Same-day production before 2 pm IST"],
     badge: "Most popular",
     turnaround: "Same-day production",
     featured: true,
@@ -210,15 +224,17 @@ const products: SeedProduct[] = [
     name: "Upload a Print-Ready Gang Sheet",
     slug: "upload-gang-sheet",
     sku: "GANG-UPL",
+    hsnCode: "4908",
+    gstRate: 18,
     type: "GANG_SHEET",
     category: "gang-sheets",
     shortDescription: "Already have a 22\" wide print-ready file? Upload it and we print it exactly as-is.",
     description: "For designers with a finished layout. Upload a transparent PNG at 300 DPI, 22\" wide. We print it as supplied with no changes.",
     images: [img("gang-sheet-upload.svg")],
-    basePrice: 699,
+    basePrice: 19900,
     options: {
       requiresArtwork: true,
-      sizes: [gang(12, 699), gang(24, 1199), gang(36, 1699), gang(48, 2199), gang(60, 2699), gang(84, 3699), gang(120, 4999), gang(180, 7299), gang(240, 9499)],
+      sizes: [gang(12, 19900), gang(24, 34900), gang(36, 49900), gang(48, 64900), gang(60, 79900), gang(84, 109900), gang(120, 149900), gang(180, 219900), gang(240, 289900)],
     },
     tiers: gangTiers,
     features: ["Printed exactly as supplied", "Transparent PNG at 300 DPI", "Up to 22\" × 240\""],
@@ -228,13 +244,15 @@ const products: SeedProduct[] = [
     name: "UV DTF Gang Sheet",
     slug: "uv-dtf-gang-sheet",
     sku: "GANG-UV",
+    hsnCode: "4908",
+    gstRate: 18,
     type: "UV_DTF",
     category: "gang-sheets",
     shortDescription: "Gang your UV DTF decals for tumblers, glass and hard goods on one sheet.",
     description: "Waterproof, scratch-resistant UV DTF decals with a raised, glossy finish. Apply by hand — no heat press required.",
     images: [img("uv-dtf-gang-sheet.svg"), img("uv-cup-wrap.svg")],
-    basePrice: 1299,
-    options: { requiresArtwork: true, sizes: [gang(12, 1299), gang(24, 2299), gang(36, 3199), gang(48, 3999), gang(60, 4799)] },
+    basePrice: 39900,
+    options: { requiresArtwork: true, sizes: [gang(12, 39900), gang(24, 69900), gang(36, 99900), gang(48, 124900), gang(60, 149900)] },
     tiers: gangTiers,
     features: ["Dishwasher-safe (top rack)", "Raised glossy texture", "Sticks to glass, metal, wood"],
     turnaround: "Ships in 48 hours",
@@ -244,13 +262,15 @@ const products: SeedProduct[] = [
     name: "UV DTF Stickers",
     slug: "uv-dtf-stickers",
     sku: "UV-STK",
+    hsnCode: "4908",
+    gstRate: 18,
     type: "UV_DTF",
     category: "uv-dtf",
     shortDescription: "Rub-on decals that bond to almost any hard surface — waterproof and scratch resistant.",
     description: "Perfect for tumblers, laptops, phone cases, signage and packaging. Peel, place, rub and reveal.",
     images: [img("uv-dtf-stickers.svg"), img("uv-cup-wrap.svg")],
-    basePrice: 129,
-    options: { requiresArtwork: true, sizes: [sq(2, 2, 129), sq(3, 3, 179), sq(4, 4, 249), sq(5, 5, 329), sq(6, 6, 399)] },
+    basePrice: 2000,
+    options: { requiresArtwork: true, sizes: [sq(2, 2, 2000), sq(3, 3, 3000), sq(4, 4, 4500), sq(5, 5, 6000), sq(6, 6, 7500)] },
     tiers: DEFAULT_TIERS,
     features: ["No heat press needed", "Waterproof & UV resistant", "Raised glossy finish"],
     turnaround: "Ships in 48 hours",
@@ -259,18 +279,20 @@ const products: SeedProduct[] = [
     name: "UV DTF Cup Wraps",
     slug: "uv-dtf-cup-wraps",
     sku: "UV-WRAP",
+    hsnCode: "4908",
+    gstRate: 18,
     type: "UV_DTF",
     category: "uv-dtf",
     shortDescription: "Full wraps sized for 16oz glass cans and 20oz / 40oz tumblers.",
     description: "Sized-to-fit wraps with alignment marks for a seamless finish on popular cups.",
     images: [img("uv-cup-wrap.svg")],
-    basePrice: 499,
+    basePrice: 9900,
     options: {
       requiresArtwork: true,
       sizes: [
-        { id: "16oz", label: "16oz glass can (9.5\" × 4.3\")", width: 9.5, height: 4.3, price: 499 },
-        { id: "20oz", label: "20oz tumbler (9.3\" × 8.2\")", width: 9.3, height: 8.2, price: 699 },
-        { id: "40oz", label: "40oz tumbler (11\" × 7.5\")", width: 11, height: 7.5, price: 799 },
+        { id: "16oz", label: "16oz glass can (9.5\" × 4.3\")", width: 9.5, height: 4.3, price: 9900 },
+        { id: "20oz", label: "20oz tumbler (9.3\" × 8.2\")", width: 9.3, height: 8.2, price: 13900 },
+        { id: "40oz", label: "40oz tumbler (11\" × 7.5\")", width: 11, height: 7.5, price: 15900 },
       ],
     },
     tiers: DEFAULT_TIERS,
@@ -281,13 +303,15 @@ const products: SeedProduct[] = [
     name: "Screen Print Transfers — Plastisol",
     slug: "screen-print-transfers",
     sku: "SP-PLAST",
+    hsnCode: "4908",
+    gstRate: 18,
     type: "SCREEN_PRINT",
     category: "screen-print-transfers",
     shortDescription: "Classic plastisol transfers for large runs. 1–3 spot colors, unbeatable price at volume.",
     description: "Ideal for teams, events and merch drops. Choose up to 3 spot colors and press with a classic, durable screen print feel.",
     images: [img("screen-print.svg")],
-    basePrice: 99,
-    options: { requiresArtwork: true, sizes: [sq(4, 4, 99), sq(8, 8, 149), sq(11, 11, 199), sq(12, 14, 249)] },
+    basePrice: 1800,
+    options: { requiresArtwork: true, sizes: [sq(4, 4, 1800), sq(8, 8, 2800), sq(11, 11, 3800), sq(12, 14, 4800)] },
     tiers: [
       { minQty: 12, discountPct: 0 },
       { minQty: 50, discountPct: 20 },
@@ -301,13 +325,15 @@ const products: SeedProduct[] = [
     name: "Puff Screen Print Transfers",
     slug: "puff-screen-print-transfers",
     sku: "SP-PUFF",
+    hsnCode: "4908",
+    gstRate: 18,
     type: "SCREEN_PRINT",
     category: "screen-print-transfers",
     shortDescription: "Raised 3D puff ink that expands under heat for a bold, textured look.",
     description: "On-trend puff print with dimensional texture. Best for bold logos and lettering.",
     images: [img("screen-print-puff.svg")],
-    basePrice: 149,
-    options: { requiresArtwork: true, sizes: [sq(4, 4, 149), sq(8, 8, 219), sq(11, 11, 289)] },
+    basePrice: 2800,
+    options: { requiresArtwork: true, sizes: [sq(4, 4, 2800), sq(8, 8, 4200), sq(11, 11, 5500)] },
     tiers: [
       { minQty: 12, discountPct: 0 },
       { minQty: 50, discountPct: 20 },
@@ -321,15 +347,17 @@ const products: SeedProduct[] = [
     name: "Premium Heavyweight Tee",
     slug: "premium-heavyweight-tee",
     sku: "APP-TEE-HW",
+    hsnCode: "6109",
+    gstRate: 5,
     type: "APPAREL",
     category: "custom-apparel",
-    shortDescription: "6.5oz ring-spun cotton tee, printed & pressed by us. Design it in the studio.",
+    shortDescription: "220 GSM combed-cotton tee, printed & pressed by us. Design it in the studio.",
     description: "A structured, boxy-fit heavyweight tee with a premium hand feel. We print your design with DTF and press it in-house, then fold and bag every piece.",
     images: [img("tee-white.svg"), img("tee-black.svg")],
-    basePrice: 999,
+    basePrice: 34900,
     options: { colors, apparelSizes, printLocations, requiresArtwork: false },
     tiers: apparelTiers,
-    features: ["6.5oz 100% ring-spun cotton", "Pre-shrunk, garment-dyed look", "Printed & pressed in-house", "No minimums"],
+    features: ["220 GSM 100% combed cotton", "Pre-shrunk, garment-dyed look", "Printed & pressed in-house", "No minimums"],
     badge: "Best seller",
     turnaround: "Ships in 3 business days",
     featured: true,
@@ -338,15 +366,17 @@ const products: SeedProduct[] = [
     name: "Oversized Boxy Tee",
     slug: "oversized-boxy-tee",
     sku: "APP-TEE-OS",
+    hsnCode: "6109",
+    gstRate: 5,
     type: "APPAREL",
     category: "custom-apparel",
-    shortDescription: "Drop-shoulder streetwear fit in a 7oz cotton jersey.",
+    shortDescription: "Drop-shoulder streetwear fit in a 240 GSM cotton jersey.",
     description: "A modern oversized silhouette with a dropped shoulder and thick ribbed collar — made for merch drops.",
     images: [img("tee-oversized.svg")],
-    basePrice: 1399,
+    basePrice: 44900,
     options: { colors: colors.filter((c) => ["White", "Black", "Sand", "Forest", "Heather Grey"].includes(c.name)), apparelSizes, printLocations, requiresArtwork: false },
     tiers: apparelTiers,
-    features: ["7oz cotton jersey", "Drop shoulder fit", "Thick ribbed collar"],
+    features: ["240 GSM cotton jersey", "Drop shoulder fit", "Thick ribbed collar"],
     badge: "New",
     turnaround: "Ships in 3 business days",
   },
@@ -354,15 +384,17 @@ const products: SeedProduct[] = [
     name: "Classic Pullover Hoodie",
     slug: "classic-pullover-hoodie",
     sku: "APP-HOOD",
+    hsnCode: "6110",
+    gstRate: 5,
     type: "APPAREL",
     category: "custom-apparel",
-    shortDescription: "Cozy 9oz fleece hoodie with kangaroo pocket. Custom printed front & back.",
+    shortDescription: "Cozy 300 GSM fleece hoodie with kangaroo pocket. Custom printed front & back.",
     description: "Midweight brushed fleece with a lined hood, matching drawcords and kangaroo pocket.",
     images: [img("hoodie.svg")],
-    basePrice: 2499,
+    basePrice: 89900,
     options: { colors, apparelSizes, printLocations, requiresArtwork: false },
     tiers: apparelTiers,
-    features: ["9oz brushed fleece", "Lined hood", "Kangaroo pocket"],
+    features: ["300 GSM brushed fleece", "Lined hood", "Kangaroo pocket"],
     turnaround: "Ships in 4 business days",
     featured: true,
   },
@@ -370,43 +402,49 @@ const products: SeedProduct[] = [
     name: "Everyday Crewneck Sweatshirt",
     slug: "everyday-crewneck",
     sku: "APP-CREW",
+    hsnCode: "6110",
+    gstRate: 5,
     type: "APPAREL",
     category: "custom-apparel",
     shortDescription: "Soft fleece crewneck that holds a print beautifully.",
     description: "A versatile 8oz fleece crewneck with ribbed cuffs and waistband.",
     images: [img("crewneck.svg")],
-    basePrice: 1999,
+    basePrice: 69900,
     options: { colors, apparelSizes, printLocations, requiresArtwork: false },
     tiers: apparelTiers,
-    features: ["8oz fleece", "Ribbed cuffs & hem", "Unisex fit"],
+    features: ["270 GSM fleece", "Ribbed cuffs & hem", "Unisex fit"],
     turnaround: "Ships in 4 business days",
   },
   {
     name: "Teflon Sheets (3-Pack)",
     slug: "teflon-sheets-3-pack",
     sku: "SUP-PTFE",
+    hsnCode: "3920",
+    gstRate: 18,
     type: "SUPPLIES",
     category: "supplies",
     shortDescription: "Reusable 16\" × 20\" PTFE sheets protect your prints and press.",
     description: "Non-stick, heat-resistant sheets for clean, even pressing.",
     images: [img("supplies-teflon.svg")],
-    basePrice: 1299,
-    options: { sizes: [{ id: "pack", label: "3-pack · 16\" × 20\"", width: 16, height: 20, price: 1299 }], requiresArtwork: false },
+    basePrice: 44900,
+    options: { sizes: [{ id: "pack", label: "3-pack · 16\" × 20\"", width: 16, height: 20, price: 44900 }], requiresArtwork: false },
     tiers: [{ minQty: 1, discountPct: 0 }, { minQty: 3, discountPct: 10 }],
-    features: ["Reusable hundreds of times", "Up to 500°F", "Non-stick"],
+    features: ["Reusable hundreds of times", "Up to 260°C", "Non-stick"],
     stock: 120,
   },
   {
     name: "Heat Press Pillow 15\" × 15\"",
     slug: "heat-press-pillow",
     sku: "SUP-PILLOW",
+    hsnCode: "9404",
+    gstRate: 18,
     type: "SUPPLIES",
     category: "supplies",
     shortDescription: "Even out pressure over seams, zippers and buttons.",
     description: "A dense foam pillow wrapped in heat-resistant fabric for perfect pressure on uneven garments.",
     images: [img("supplies-pillow.svg")],
-    basePrice: 1899,
-    options: { sizes: [{ id: "15x15", label: '15" × 15"', width: 15, height: 15, price: 1899 }], requiresArtwork: false },
+    basePrice: 69900,
+    options: { sizes: [{ id: "15x15", label: '15" × 15"', width: 15, height: 15, price: 69900 }], requiresArtwork: false },
     tiers: [{ minQty: 1, discountPct: 0 }],
     features: ["Heat resistant to 450°F", "Fixes seam pressure issues"],
     stock: 38,
@@ -415,27 +453,30 @@ const products: SeedProduct[] = [
     name: "Heat Resistant Tape",
     slug: "heat-resistant-tape",
     sku: "SUP-TAPE",
+    hsnCode: "3919",
+    gstRate: 18,
     type: "SUPPLIES",
     category: "supplies",
     shortDescription: "Keeps transfers exactly where you put them. Leaves no residue.",
     description: "10mm × 33m roll of polyimide tape.",
     images: [img("supplies-tape.svg")],
-    basePrice: 699,
-    options: { sizes: [{ id: "roll", label: "10mm × 33m roll", width: 0.4, height: 1300, price: 699 }], requiresArtwork: false },
+    basePrice: 24900,
+    options: { sizes: [{ id: "roll", label: "10mm × 33m roll", width: 0.4, height: 1300, price: 24900 }], requiresArtwork: false },
     tiers: [{ minQty: 1, discountPct: 0 }, { minQty: 5, discountPct: 15 }],
     features: ["No residue", "Heat resistant"],
     stock: 4,
   },
 ];
 
-const firstNames = ["Ava", "Liam", "Mia", "Noah", "Zoe", "Ethan", "Chloe", "Lucas", "Maya", "Leo", "Aria", "Jonah", "Priya", "Diego", "Sofia", "Marcus", "Hana", "Omar", "Ivy", "Caleb", "Nina", "Theo", "Layla", "Andre", "Ruby", "Kai"];
-const lastNames = ["Carter", "Nguyen", "Patel", "Rivera", "Brooks", "Kim", "Okafor", "Silva", "Bennett", "Hughes", "Reyes", "Shah", "Foster", "Ward", "Lopez", "Grant", "Price", "Hayes"];
-const companies = ["Bold Thread Co.", "Northside Athletics", "Lucky Ink Studio", "Wildflower Boutique", "Peak Supply", "Ridge Runners FC", "Sunday Club", null, null, null, null];
+const firstNames = ["Aarav", "Priya", "Rohan", "Ananya", "Vikram", "Neha", "Arjun", "Kavya", "Ishaan", "Diya", "Kabir", "Meera", "Aditya", "Riya", "Siddharth", "Tanvi", "Yash", "Sneha", "Harsh", "Pooja", "Nikhil", "Aisha", "Varun", "Simran", "Karan", "Divya"];
+const lastNames = ["Shah", "Patel", "Mehta", "Iyer", "Singh", "Gupta", "Reddy", "Nair", "Joshi", "Desai", "Malhotra", "Pillai", "Kulkarni", "Sharma", "Rao", "Bhatt", "Agarwal", "Menon"];
+const companies = ["Rangrez Prints", "Surat Tee Co.", "Bandra Merch House", "Pink City Apparel", "Chai & Cotton", "Deccan Sports Club", "Kochi Craft Studio", null, null, null, null];
 const cities = [
-  ["Austin", "TX", "78701"], ["Denver", "CO", "80202"], ["Nashville", "TN", "37203"], ["Phoenix", "AZ", "85004"], ["Portland", "OR", "97205"],
-  ["Atlanta", "GA", "30303"], ["Chicago", "IL", "60607"], ["Miami", "FL", "33130"], ["Seattle", "WA", "98101"], ["Brooklyn", "NY", "11211"],
+  ["Ahmedabad", "Gujarat", "380009"], ["Surat", "Gujarat", "395007"], ["Mumbai", "Maharashtra", "400050"], ["Pune", "Maharashtra", "411001"],
+  ["Bengaluru", "Karnataka", "560034"], ["Chennai", "Tamil Nadu", "600017"], ["Hyderabad", "Telangana", "500081"], ["New Delhi", "Delhi", "110017"],
+  ["Jaipur", "Rajasthan", "302001"], ["Kolkata", "West Bengal", "700019"], ["Kochi", "Kerala", "682016"], ["Lucknow", "Uttar Pradesh", "226010"],
 ] as const;
-const streets = ["Maple Ave", "Oak St", "Sunset Blvd", "Market St", "Pine Rd", "Cedar Ln", "River Dr", "Elm St"];
+const streets = ["MG Road", "CG Road", "Linking Road", "Park Street", "Anna Salai", "Koramangala 5th Block", "Banjara Hills Road No. 12", "Sector 17", "FC Road", "Civil Lines"];
 
 const reviewTexts: [number, string, string][] = [
   [5, "Colors are insane", "Printed a full gang sheet for our merch drop and the colors came out brighter than my screen. Pressed 60 shirts, zero lifting."],
@@ -445,7 +486,7 @@ const reviewTexts: [number, string, string][] = [
   [5, "Wash test passed", "Washed my test tee 40 times. Still looks brand new, no cracking."],
   [4, "Love the DPI checker", "The builder warned me one of my logos was low-res before I ordered. Saved me a reprint."],
   [5, "Our go-to print partner", "We run a small boutique and order weekly. Consistent quality and the support team is great."],
-  [3, "Good, shipping was slow", "Prints are great but standard shipping took 6 days to Oregon. Will choose express next time."],
+  [3, "Good, shipping was slow", "Prints are great but standard delivery took 6 days to Guwahati. Will choose express next time."],
   [5, "Glitter is next level", "The glitter finish photographs beautifully. Sold out our whole run in a weekend."],
   [5, "Perfect for team uniforms", "Ordered 48 hoodies with names on the back. Everything was correct and packed by size."],
 ];
@@ -469,13 +510,26 @@ function resolvePasswords() {
   return { local, admin, staff: process.env.SEED_STAFF_PASSWORD || random(), customer: process.env.SEED_CUSTOMER_PASSWORD || random() };
 }
 
+/**
+ * Bump when the demo data changes shape (e.g. "india-v1": amounts became INR paise with GST).
+ * A deploy with RESET_DEMO_DATA set to this value replaces existing data once; the marker row
+ * written at the end of the seed stops it from ever running again for the same version.
+ */
+const DATA_VERSION = "india-v1";
+const DATA_VERSION_KEY = "dataVersion";
+
 async function main() {
   const onlyIfEmpty = process.argv.includes("--if-empty");
   if (onlyIfEmpty) {
     const existing = await db.user.count();
     if (existing > 0) {
-      console.log(`Seed skipped: database already has ${existing} user(s).`);
-      return;
+      const requested = process.env.RESET_DEMO_DATA?.trim() === DATA_VERSION;
+      const marker = await db.setting.findUnique({ where: { key: DATA_VERSION_KEY } });
+      if (!requested || marker?.value === J(DATA_VERSION)) {
+        console.log(`Seed skipped: database already has ${existing} user(s)${requested ? ` and is on ${DATA_VERSION}` : ""}.`);
+        return;
+      }
+      console.log(`RESET_DEMO_DATA=${DATA_VERSION}: replacing existing data with the ${DATA_VERSION} demo store (runs once).`);
     }
   }
   const pw = resolvePasswords();
@@ -511,16 +565,16 @@ async function main() {
   const demo = await db.user.create({
     data: {
       email: "customer@inkforge.test",
-      name: "Riley Customer",
+      name: "Riya Shah",
       role: "CUSTOMER",
       passwordHash: await bcrypt.hash(pw.customer, 10),
-      company: "Riley's Print Shop",
-      phone: "(512) 555-0199",
+      company: "Riya's Print Studio",
+      phone: "+91 98250 12345",
       marketingOptIn: true,
       addresses: {
         create: [
-          { label: "Studio", name: "Riley Customer", company: "Riley's Print Shop", line1: "418 Congress Ave", line2: "Unit 2", city: "Austin", state: "TX", zip: "78701", country: "US", phone: "(512) 555-0199", isDefault: true },
-          { label: "Home", name: "Riley Customer", line1: "77 Lakeview Dr", city: "Round Rock", state: "TX", zip: "78664", country: "US" },
+          { label: "Studio", name: "Riya Shah", company: "Riya's Print Studio", line1: "B-204, Shivalik Business Centre", line2: "Near Rajpath Club, SG Highway", city: "Ahmedabad", state: "Gujarat", zip: "380054", country: "IN", phone: "+91 98250 12345", isDefault: true },
+          { label: "Home", name: "Riya Shah", line1: "12, Shanti Kunj Society", line2: "Satellite Road", city: "Ahmedabad", state: "Gujarat", zip: "380015", country: "IN", phone: "+91 98250 12345" },
         ],
       },
     },
@@ -570,6 +624,8 @@ async function main() {
         tiers: J(p.tiers),
         features: J(p.features),
         badge: p.badge ?? null,
+        hsnCode: p.hsnCode,
+        gstRate: p.gstRate,
         turnaround: p.turnaround ?? null,
         stock: p.stock ?? null,
         featured: !!p.featured,
@@ -606,10 +662,10 @@ async function main() {
   await db.coupon.createMany({
     data: [
       { code: "WELCOME10", description: "10% off your first order", type: "PERCENT", value: 10, minSubtotal: 0, usedCount: 38 },
-      { code: "FREESHIP", description: "Free standard shipping", type: "FREE_SHIPPING", value: 0, minSubtotal: 3000, usedCount: 112 },
-      { code: "BULK25", description: "$25 off orders over $200", type: "FIXED", value: 2500, minSubtotal: 20000, usedCount: 17, maxUses: 500 },
-      { code: "GANG15", description: "15% off gang sheets", type: "PERCENT", value: 15, minSubtotal: 5000, usedCount: 9, expiresAt: new Date(now + 20 * 86400000) },
-      { code: "SUMMER20", description: "Summer sale (expired)", type: "PERCENT", value: 20, minSubtotal: 0, usedCount: 204, active: false, expiresAt: new Date(now - 60 * 86400000) },
+      { code: "FREESHIP", description: "Free standard delivery on orders above ₹499", type: "FREE_SHIPPING", value: 0, minSubtotal: 49900, usedCount: 112 },
+      { code: "BULK250", description: "₹250 off orders above ₹2,500", type: "FIXED", value: 25000, minSubtotal: 250000, usedCount: 17, maxUses: 500 },
+      { code: "GANG15", description: "15% off orders above ₹999", type: "PERCENT", value: 15, minSubtotal: 99900, usedCount: 9, expiresAt: new Date(now + 20 * 86400000) },
+      { code: "DIWALI20", description: "Diwali festive sale (expired)", type: "PERCENT", value: 20, minSubtotal: 0, usedCount: 204, active: false, expiresAt: new Date(now - 20 * 86400000) },
     ],
   });
 
@@ -628,7 +684,7 @@ async function main() {
     IN_PRODUCTION: "Artwork approved and queued for printing",
     QUALITY_CHECK: "Printed and cured — quality check in progress",
     READY: "Packed and ready for carrier pickup",
-    SHIPPED: "Shipped via UPS Ground",
+    SHIPPED: "Shipped via Delhivery",
     DELIVERED: "Delivered",
     CANCELLED: "Order cancelled at customer request",
     REFUNDED: "Payment refunded",
@@ -649,6 +705,7 @@ async function main() {
     const items: {
       productId: string; name: string; type: string; image: string; variantLabel: string; selection: string;
       quantity: number; unitPrice: number; total: number; artworkUrl: string | null; artworkStatus: string;
+      hsnCode: string; gstRate: number;
     }[] = [];
     for (let l = 0; l < lineCount; l++) {
       const { id, p } = rand() < 0.4 ? productRows[5]! : pick(productRows);
@@ -683,13 +740,24 @@ async function main() {
         total: price.total,
         artworkUrl: art,
         artworkStatus: art ? (status === "ARTWORK_REVIEW" || status === "PENDING" ? "PENDING" : "APPROVED") : "APPROVED",
+        hsnCode: p.hsnCode,
+        gstRate: p.gstRate,
       });
     }
     const subtotal = items.reduce((s, it) => s + it.total, 0);
     const coupon = rand() < 0.22 ? pick(coupons.filter((c) => c.active)) : null;
-    const shippingMethod = pick(["standard", "standard", "standard", "express", "overnight", "pickup"]);
+    const shippingMethod = pick(["standard", "standard", "standard", "express", "pickup"]);
     const isRush = rand() < 0.12;
-    const totals = computeTotals({ subtotal, settings: DEFAULT_SETTINGS, shippingMethodId: shippingMethod, coupon, rush: isRush });
+    const cod = status !== "PENDING" && subtotal <= DEFAULT_SETTINGS.codMaxOrder * 0.85 && rand() < 0.35;
+    const totals = computeTotals({
+      subtotal,
+      settings: DEFAULT_SETTINGS,
+      shippingMethodId: shippingMethod,
+      coupon,
+      rush: isRush,
+      cod,
+      lines: items.map((it) => ({ amount: it.total, gstRate: it.gstRate })),
+    });
     const [city, state, zip] = pick(cities);
     const paid = status !== "PENDING";
     const idx = flow.indexOf(status);
@@ -701,22 +769,23 @@ async function main() {
         userId: guest ? null : customer.id,
         email: customer.email,
         customerName: customer.name,
-        phone: rand() > 0.5 ? `(555) 01${between(10, 99)}-${between(1000, 9999)}` : null,
+        phone: `+91 9${between(1000, 9999)} ${between(10000, 99999)}`,
         status,
-        paymentStatus: status === "REFUNDED" ? "REFUNDED" : paid ? "PAID" : "UNPAID",
-        paymentMethod: paid ? pick(["card", "card", "card", "paypal"]) : null,
+        paymentStatus: status === "REFUNDED" ? "REFUNDED" : cod ? (status === "DELIVERED" ? "PAID" : "UNPAID") : paid ? "PAID" : "UNPAID",
+        paymentMethod: cod ? "cod" : paid ? "razorpay" : null,
         shippingMethod,
-        shippingAddress: J({ name: customer.name, line1: `${between(100, 9999)} ${pick(streets)}`, city, state, zip, country: "US" }),
+        shippingAddress: J({ name: customer.name, line1: `${between(1, 400)}, ${pick(streets)}`, city, state, zip, country: "IN" }),
         subtotal: totals.subtotal,
         discount: totals.discount,
         shipping: totals.shipping,
         rushFee: totals.rushFee,
+        codFee: totals.codFee,
         tax: totals.tax,
         total: totals.total,
         couponCode: coupon?.code ?? null,
         isRush,
-        carrier: ["SHIPPED", "DELIVERED"].includes(status) ? "UPS" : null,
-        trackingNumber: ["SHIPPED", "DELIVERED"].includes(status) ? `1Z${between(100000, 999999)}${between(1000000, 9999999)}` : null,
+        carrier: ["SHIPPED", "DELIVERED"].includes(status) ? "Delhivery" : null,
+        trackingNumber: ["SHIPPED", "DELIVERED"].includes(status) ? `${between(1000000, 9999999)}${between(100000, 999999)}` : null,
         notes: rand() < 0.15 ? pick(["Please match Pantone 185C as close as possible.", "Need these by Friday for an event!", "Mirror the back print please.", "Pack by size if possible."]) : null,
         createdAt,
         updatedAt: new Date(Math.min(now, createdAt.getTime() + reached.length * 7 * 3600000)),
@@ -760,16 +829,17 @@ async function main() {
   }
   await db.contactMessage.createMany({
     data: [
-      { name: "Marcus Grant", email: "marcus@ridgerunners.example", subject: "Bulk pricing for 400 jerseys", message: "Hi! We need 400 transfers for our club jerseys (numbers + names). Can you do a custom quote with a 2 week turnaround?", createdAt: new Date(now - 2 * 3600000) },
-      { name: "Hana Kim", email: "hana@wildflower.example", subject: "Press settings for nylon?", message: "Do your DTF transfers work on nylon windbreakers? If yes, what temperature should I use?", createdAt: new Date(now - 26 * 3600000) },
-      { name: "Diego Silva", email: "diego@example.com", subject: "Wholesale account", message: "I run a print shop in Phoenix and would like to open a wholesale account. What are the requirements?", status: "READ", createdAt: new Date(now - 3 * 86400000) },
-      { name: "Ivy Brooks", email: "ivy@example.com", subject: "Order IF-10012 question", message: "Can I add one more 22x24 sheet to my order before it ships?", status: "REPLIED", createdAt: new Date(now - 9 * 86400000) },
+      { name: "Karan Malhotra", email: "karan@deccansports.example", subject: "Bulk pricing for 400 jerseys", message: "Hi! We need 400 transfers for our club jerseys (numbers + names). Can you share a quote with a 2-week turnaround to Hyderabad?", createdAt: new Date(now - 2 * 3600000) },
+      { name: "Meera Pillai", email: "meera@kochicraft.example", subject: "Press settings for nylon?", message: "Do your DTF transfers work on nylon windbreakers? If yes, what temperature should I use?", createdAt: new Date(now - 26 * 3600000) },
+      { name: "Yash Agarwal", email: "yash@example.com", subject: "Wholesale account with GST invoice", message: "I run a print shop in Jaipur and would like to open a wholesale account with GST invoices. What are the requirements?", status: "READ", createdAt: new Date(now - 3 * 86400000) },
+      { name: "Sneha Menon", email: "sneha@example.com", subject: "Order IF-10012 question", message: "Can I add one more 22x24 sheet to my order before it ships?", status: "REPLIED", createdAt: new Date(now - 9 * 86400000) },
     ],
   });
   await db.newsletterSubscriber.createMany({
     data: customers.filter((c) => c.marketingOptIn).map((c) => ({ email: c.email, createdAt: c.createdAt })),
   });
 
+  await db.setting.upsert({ where: { key: DATA_VERSION_KEY }, create: { key: DATA_VERSION_KEY, value: J(DATA_VERSION) }, update: { value: J(DATA_VERSION) } });
   console.log(`\n✔ Seeded ${products.length} products, ${customers.length} customers, ${TOTAL_ORDERS} orders.`);
   if (pw.local) {
     console.log("  Admin:    admin@inkforge.test / Admin@12345");

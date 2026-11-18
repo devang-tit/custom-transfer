@@ -42,9 +42,15 @@ export type EmailOrder = {
   couponCode: string | null;
   shipping: number;
   rushFee: number;
+  codFee: number;
   tax: number;
+  /** GST is already inside the prices (India B2C) */
+  taxIncluded: boolean;
   total: number;
   isRush: boolean;
+  /** razorpay | cod | demo */
+  paymentMethod: string | null;
+  paid: boolean;
   carrier: string | null;
   trackingNumber: string | null;
   trackingUrl: string | null;
@@ -158,19 +164,21 @@ ${line("Subtotal", formatMoney(o.subtotal))}
 ${o.discount ? line(`Discount${o.couponCode ? ` (${o.couponCode})` : ""}`, `−${formatMoney(o.discount)}`) : ""}
 ${line(`Shipping · ${o.shippingMethodLabel}`, o.shipping ? formatMoney(o.shipping) : "Free")}
 ${o.rushFee ? line("Rush production", formatMoney(o.rushFee)) : ""}
-${line("Tax", formatMoney(o.tax))}
+${o.codFee ? line("Cash on Delivery fee", formatMoney(o.codFee)) : ""}
+${o.taxIncluded ? "" : line("GST", formatMoney(o.tax))}
 <tr><td colspan="2" style="padding-top:6px;border-bottom:1px solid ${C.border}"></td></tr>
-${line("Total", formatMoney(o.total), true)}
+${line(o.paymentMethod === "cod" && !o.paid ? "Total (pay on delivery)" : "Total", formatMoney(o.total), true)}
+${o.taxIncluded && o.tax ? `<tr><td colspan="2" align="right" style="padding-top:2px;font-family:${FONT};font-size:12px;color:${C.muted}">Includes ${formatMoney(o.tax)} GST</td></tr>` : ""}
 </table>`;
 }
 
 function addressBlock(o: EmailOrder): string {
   if (o.isPickup) {
-    return `<div style="font-family:${FONT};font-size:14px;line-height:1.55;color:${C.ink}">Local pickup<br><span style="color:${C.muted}">We'll email you when it's ready.</span></div>`;
+    return `<div style="font-family:${FONT};font-size:14px;line-height:1.55;color:${C.ink}">Studio pickup<br><span style="color:${C.muted}">We'll email you when it's ready.</span></div>`;
   }
   const a = o.address;
   if (!a) return "";
-  const lines = [a.name, a.company, a.line1, a.line2, `${a.city}, ${a.state} ${a.zip}`, a.country].filter(Boolean).map((l) => esc(l));
+  const lines = [a.name, a.company, a.line1, a.line2, `${a.city}, ${a.state} – ${a.zip}`, a.country === "IN" ? "India" : a.country, a.phone].filter(Boolean).map((l) => esc(l));
   return `<div style="font-family:${FONT};font-size:14px;line-height:1.55;color:${C.ink}">${lines.join("<br>")}</div>`;
 }
 
@@ -238,8 +246,9 @@ function textTotals(o: EmailOrder): string {
     o.discount ? `Discount${o.couponCode ? ` (${o.couponCode})` : ""}: -${formatMoney(o.discount)}` : null,
     `Shipping (${o.shippingMethodLabel}): ${o.shipping ? formatMoney(o.shipping) : "Free"}`,
     o.rushFee ? `Rush production: ${formatMoney(o.rushFee)}` : null,
-    `Tax: ${formatMoney(o.tax)}`,
-    `Total: ${formatMoney(o.total)}`,
+    o.codFee ? `Cash on Delivery fee: ${formatMoney(o.codFee)}` : null,
+    o.taxIncluded ? null : `GST: ${formatMoney(o.tax)}`,
+    `Total: ${formatMoney(o.total)}${o.taxIncluded && o.tax ? ` (includes ${formatMoney(o.tax)} GST)` : ""}`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -253,10 +262,15 @@ export function orderConfirmationEmail(o: EmailOrder, brand: EmailBrand): Render
   const next = needsReview
     ? "Our prepress team will check your artwork for print quality (usually within a few hours). If anything needs a tweak we'll email you; otherwise it goes straight to print."
     : "Your order is queued for production. We'll email you again when it ships.";
+  const cod = o.paymentMethod === "cod" && !o.paid;
+  const greeting = cod
+    ? `thanks for your order! It's confirmed and we're getting started. You'll pay <strong>${esc(formatMoney(o.total))}</strong> in cash or UPI when it's delivered.`
+    : "thanks for your order! We've received your payment and we're getting started.";
   const body = `
-${p(`Hi ${esc(firstName(o.customerName))}, thanks for your order! We've received your payment and we're getting started.`)}
+${p(`Hi ${esc(firstName(o.customerName))}, ${greeting}`)}
 ${progress(o.status)}
 ${button(url, "View your order")}
+${cod ? noteBox("Cash on Delivery", `Please keep ${esc(formatMoney(o.total))} ready for the delivery partner.`, C.yellow) : ""}
 ${o.isRush ? noteBox("Rush production", "Your order is flagged for rush production and moves to the front of the queue.", C.magenta) : ""}
 ${noteBox("What happens next", esc(next))}
 ${sectionTitle(`Order ${o.number} · ${formatDate(o.createdAt)}`)}
@@ -268,7 +282,7 @@ ${o.notes ? noteBox("Your notes", escMultiline(o.notes), C.yellow) : ""}`;
   return {
     subject: `Order confirmed · ${o.number}`,
     html: layout({ brand, preheader: `Thanks for your order! ${o.items.length} item${o.items.length === 1 ? "" : "s"} · ${formatMoney(o.total)}`, eyebrow: "Order confirmed", title: "Thanks — we're on it!", body }),
-    text: `Hi ${firstName(o.customerName)}, thanks for your order!\n\nOrder ${o.number} (${formatDate(o.createdAt)})\n\n${textItems(o)}\n\n${textTotals(o)}\n\nWhat happens next: ${next}\n\nView your order: ${url}${textFooter(brand)}`,
+    text: `Hi ${firstName(o.customerName)}, thanks for your order!${cod ? ` You'll pay ${formatMoney(o.total)} on delivery.` : ""}\n\nOrder ${o.number} (${formatDate(o.createdAt)})\n\n${textItems(o)}\n\n${textTotals(o)}\n\nWhat happens next: ${next}\n\nView your order: ${url}${textFooter(brand)}`,
   };
 }
 
@@ -292,12 +306,12 @@ function statusCopy(status: string, o: EmailOrder): StatusCopy {
       return {
         subject: "Your order was delivered",
         title: "Delivered. Happy pressing!",
-        intro: "Your order was delivered. For DTF transfers, press at 300–315°F for 10–15 seconds with medium pressure, then peel hot or cold.",
+        intro: "Your order was delivered. For DTF transfers, press at 150–160°C (300–315°F) for 10–15 seconds with medium pressure, then peel hot or cold.",
       };
     case "CANCELLED":
       return { subject: "Your order was cancelled", title: "Your order was cancelled", intro: "Your order has been cancelled. If you were charged, the refund goes back to your original payment method." };
     case "REFUNDED":
-      return { subject: "Your refund is on its way", title: "Your refund is on its way", intro: "We've issued a refund to your original payment method. It can take 5–10 business days to show up." };
+      return { subject: "Your refund is on its way", title: "Your refund is on its way", intro: "We've issued a refund to your original payment method. It usually reaches your UPI, card or bank account within 5–7 working days." };
     default:
       return { subject: `Order update: ${statusMeta(status).label}`, title: statusMeta(status).label, intro: statusMeta(status).description };
   }

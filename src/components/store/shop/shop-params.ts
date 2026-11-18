@@ -15,10 +15,10 @@ export const SORTS = [
 ] as const;
 
 export const PRICE_PRESETS = [
-  { id: "under-5", label: "Under $5", min: 0, max: 499 },
-  { id: "5-20", label: "$5 – $20", min: 500, max: 1999 },
-  { id: "20-50", label: "$20 – $50", min: 2000, max: 4999 },
-  { id: "50-plus", label: "$50 & up", min: 5000, max: Infinity },
+  { id: "under-100", label: "Under ₹100", min: 0, max: 9999 },
+  { id: "100-500", label: "₹100 – ₹500", min: 10000, max: 49999 },
+  { id: "500-1000", label: "₹500 – ₹1,000", min: 50000, max: 99999 },
+  { id: "1000-plus", label: "₹1,000 & up", min: 100000, max: Infinity },
 ] as const;
 
 /** Build a /shop URL with a patch applied (undefined/"" removes a key). */

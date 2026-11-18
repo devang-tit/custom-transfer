@@ -57,7 +57,7 @@ const sections: LegalSection[] = [
     title: "Payment",
     body: (
       <p>
-        Payment is due at checkout unless you have an approved invoice account. Payments are processed by secure third-party providers; we never store full card numbers on our servers.
+        All prices are in Indian Rupees (₹) and include GST unless stated otherwise. Payment is due at checkout unless you have an approved invoice account, or on delivery when you choose Cash on Delivery. Online payments (UPI, cards, netbanking, wallets) are processed by Razorpay; we never see or store your card or UPI credentials. A GST invoice is issued for every order — add your GSTIN at checkout to claim input tax credit.
       </p>
     ),
   },
@@ -67,6 +67,24 @@ const sections: LegalSection[] = [
     body: (
       <p>
         To the fullest extent permitted by law, {n}&apos;s liability for any claim related to an order is limited to the amount paid for that order. We are not liable for indirect or consequential losses, including garments damaged by incorrect pressing.
+      </p>
+    ),
+  },
+  {
+    id: "law",
+    title: "Governing law",
+    body: (
+      <p>
+        These terms are governed by the laws of India. Any dispute will be subject to the exclusive jurisdiction of the courts at Ahmedabad, Gujarat. Consumers may also approach the consumer commission under the Consumer Protection Act, 2019.
+      </p>
+    ),
+  },
+  {
+    id: "grievance",
+    title: "Grievance officer",
+    body: (
+      <p>
+        In line with the Consumer Protection (E-Commerce) Rules, 2020, complaints can be sent to our grievance officer at <strong>{siteConfig.contact.email}</strong> or {siteConfig.contact.phone}. We acknowledge complaints within 48 hours and resolve them within one month.
       </p>
     ),
   },
@@ -82,5 +100,5 @@ const sections: LegalSection[] = [
 ];
 
 export default function TermsPage() {
-  return <LegalPage eyebrow="Legal" title="Terms of service" description={`The rules for using ${n} and ordering custom prints.`} updated="November 1, 2026" sections={sections} />;
+  return <LegalPage eyebrow="Legal" title="Terms of service" description={`The rules for using ${n} and ordering custom prints.`} updated="18 November 2026" sections={sections} />;
 }

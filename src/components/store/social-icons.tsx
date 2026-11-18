@@ -36,23 +36,11 @@ export function PaymentBadges({ className }: { className?: string }) {
   return (
     <div className={className}>
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className={badge}>
-          <span className="text-[#1a1f71] dark:text-blue-300 italic">VISA</span>
-        </span>
-        <span className={badge}>
-          <span className="relative mr-0.5 inline-block h-3 w-5">
-            <span className="absolute left-0 size-3 rounded-full bg-[#eb001b]" />
-            <span className="absolute right-0 size-3 rounded-full bg-[#f79e1b] mix-blend-multiply dark:mix-blend-screen" />
+        {["UPI", "RuPay", "VISA", "Mastercard", "Netbanking", "COD"].map((m) => (
+          <span key={m} className={badge}>
+            {m}
           </span>
-          MC
-        </span>
-        <span className={badge}>AMEX</span>
-        <span className={badge}>
-          <span className="text-[#003087] dark:text-sky-300">Pay</span>
-          <span className="text-[#009cde]">Pal</span>
-        </span>
-        <span className={badge}> Pay</span>
-        <span className={badge}>G Pay</span>
+        ))}
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { COURIERS } from "@/lib/india";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Check, CircleX, Ellipsis, FileText, Loader2, PackageCheck, Printer, RotateCcw, Ban, CreditCard, Send, Lock, PencilLine } from "lucide-react";
@@ -188,7 +189,7 @@ export function ArtworkActions({ itemId, status }: { itemId: string; status: str
   );
 }
 
-const CARRIERS = ["UPS", "USPS", "FedEx", "DHL", "Local pickup"];
+const CARRIERS = [...COURIERS, "Studio pickup"];
 
 export function ShippingForm({
   orderId,
@@ -201,13 +202,13 @@ export function ShippingForm({
   trackingNumber: string | null;
   status: string;
 }) {
-  const [c, setC] = useState(carrier ?? "UPS");
+  const [c, setC] = useState(carrier ?? "Delhivery");
   const [t, setT] = useState(trackingNumber ?? "");
   const { pending, run } = useAction();
   const canShip = !["SHIPPED", "DELIVERED", "CANCELLED", "REFUNDED"].includes(status);
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-[110px_1fr] gap-2">
+      <div className="grid grid-cols-[140px_1fr] gap-2">
         <div className="space-y-1.5">
           <Label className="text-xs text-muted-foreground">Carrier</Label>
           <Select value={c} onValueChange={setC}>
@@ -227,7 +228,7 @@ export function ShippingForm({
           <Label htmlFor="tracking" className="text-xs text-muted-foreground">
             Tracking number
           </Label>
-          <Input id="tracking" value={t} onChange={(e) => setT(e.target.value)} placeholder="1Z…" className="font-mono" />
+          <Input id="tracking" value={t} onChange={(e) => setT(e.target.value)} placeholder="AWB number" className="font-mono" />
         </div>
       </div>
       <div className="flex gap-2">

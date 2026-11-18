@@ -72,7 +72,7 @@ export default async function CustomerDetailPage(props: PageProps<"/admin/custom
                       </p>
                       <p className="text-muted-foreground">
                         {a.line1}
-                        {a.line2 ? `, ${a.line2}` : ""}, {a.city}, {a.state} {a.zip}
+                        {a.line2 ? `, ${a.line2}` : ""}, {a.city}, {a.state} – {a.zip}
                       </p>
                     </div>
                   </li>

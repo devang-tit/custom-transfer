@@ -18,7 +18,7 @@ const sections: LegalSection[] = [
       <ul>
         <li><strong>Account details:</strong> name, email, phone, company and saved addresses.</li>
         <li><strong>Order details:</strong> items, artwork files, shipping address and order notes.</li>
-        <li><strong>Payment details:</strong> processed by our payment provider — we receive only a confirmation and the last digits of your card.</li>
+        <li><strong>Payment details:</strong> processed by Razorpay — we receive only a payment confirmation and reference, never your card, UPI PIN or bank credentials.</li>
         <li><strong>Usage data:</strong> basic analytics such as pages visited and device type, used to improve the site.</li>
       </ul>
     ),
@@ -42,12 +42,12 @@ const sections: LegalSection[] = [
   {
     id: "sharing",
     title: "Sharing",
-    body: <p>We share information only with service providers that help us operate — payment processors, shipping carriers and email delivery — and only as needed. We do not sell personal information.</p>,
+    body: <p>We share information only with service providers that help us operate — payment processors (Razorpay), courier partners and email delivery — and only as needed. We do not sell personal information.</p>,
   },
   {
     id: "rights",
     title: "Your choices & rights",
-    body: <p>You can update your details in your account, unsubscribe from marketing at any time, and request a copy or deletion of your data by contacting <strong>{siteConfig.contact.email}</strong>.</p>,
+    body: <p>You can update your details in your account, unsubscribe from marketing at any time, and request a copy, correction or deletion of your personal data (as provided under India’s Digital Personal Data Protection Act, 2023) by contacting <strong>{siteConfig.contact.email}</strong>.</p>,
   },
   {
     id: "cookies",
@@ -57,5 +57,5 @@ const sections: LegalSection[] = [
 ];
 
 export default function PrivacyPage() {
-  return <LegalPage eyebrow="Legal" title="Privacy policy" description="How we collect, use and protect your information." updated="November 1, 2026" sections={sections} />;
+  return <LegalPage eyebrow="Legal" title="Privacy policy" description="How we collect, use and protect your information." updated="18 November 2026" sections={sections} />;
 }

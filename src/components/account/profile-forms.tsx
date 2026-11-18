@@ -58,8 +58,8 @@ export function ProfileForm({
           <FormField label="Email" htmlFor="email" hint="Contact support to change your email.">
             <Input id="email" value={user.email} disabled className={fieldInputClass} />
           </FormField>
-          <FormField label="Phone" htmlFor="phone" error={fe?.phone}>
-            <Input id="phone" name="phone" type="tel" defaultValue={user.phone ?? ""} autoComplete="tel" placeholder="(555) 555-0100" className={fieldInputClass} />
+          <FormField label="Mobile number" htmlFor="phone" error={fe?.phone}>
+            <Input id="phone" name="phone" type="tel" defaultValue={user.phone ?? ""} autoComplete="tel" placeholder="98765 43210" className={fieldInputClass} />
           </FormField>
           <FormField label="Company" htmlFor="company" error={fe?.company}>
             <Input id="company" name="company" defaultValue={user.company ?? ""} autoComplete="organization" className={fieldInputClass} />

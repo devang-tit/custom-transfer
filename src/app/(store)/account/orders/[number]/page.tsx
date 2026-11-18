@@ -11,6 +11,7 @@ import { Panel } from "@/components/account/section";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatDateTime, formatMoney } from "@/lib/format";
+import { paymentMethodLabel } from "@/lib/order-display";
 import { parseJson } from "@/lib/json";
 import { PLACEHOLDER_IMAGE } from "@/lib/products";
 import { getSettings } from "@/lib/settings";
@@ -170,16 +171,17 @@ export default async function OrderDetailPage({ params }: PageProps<"/account/or
               {order.discount > 0 && <Row label={`Discount${order.couponCode ? ` (${order.couponCode})` : ""}`} value={`−${formatMoney(order.discount)}`} accent />}
               <Row label={`Shipping${method ? ` · ${method.label}` : ""}`} value={order.shipping ? formatMoney(order.shipping) : "Free"} />
               {order.rushFee > 0 && <Row label="Rush production" value={formatMoney(order.rushFee)} />}
-              <Row label="Tax" value={formatMoney(order.tax)} />
+              {order.codFee > 0 && <Row label="Cash on Delivery fee" value={formatMoney(order.codFee)} />}
               <div className="my-1 h-px bg-border" />
               <div className="flex items-center justify-between">
                 <dt className="font-semibold">Total</dt>
-                <dd className="font-heading text-xl font-bold tabular-nums">{formatMoney(order.total)}</dd>
+                <dd className="text-xl font-bold tabular-nums">{formatMoney(order.total)}</dd>
               </div>
+              {order.tax > 0 && <p className="text-right text-xs text-muted-foreground">{settings.pricesIncludeTax ? `Includes ${formatMoney(order.tax)} GST` : `GST ${formatMoney(order.tax)}`}</p>}
             </dl>
             <div className="mt-4 flex items-center justify-between rounded-xl bg-muted/60 px-3 py-2.5 text-sm">
               <span className="inline-flex items-center gap-2 text-muted-foreground">
-                <CreditCard className="size-4" /> {order.paymentMethod ? order.paymentMethod.replace(/^\w/, (c) => c.toUpperCase()) : "Payment"}
+                <CreditCard className="size-4" /> {paymentMethodLabel(order.paymentMethod)}
               </span>
               <PaymentStatusBadge status={order.paymentStatus} />
             </div>
@@ -197,7 +199,7 @@ export default async function OrderDetailPage({ params }: PageProps<"/account/or
                     {address.line2 ? `, ${address.line2}` : ""}
                   </p>
                   <p className="text-muted-foreground">
-                    {[address.city, address.state, address.zip].filter(Boolean).join(", ")} {address.country}
+                    {[address.city, address.state].filter(Boolean).join(", ")}{address.zip ? ` – ${address.zip}` : ""}, India
                   </p>
                 </address>
               </div>

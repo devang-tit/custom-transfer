@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/shared/empty-state";
+import { INDIAN_STATES, findState } from "@/lib/india";
 import { FormError, FormField, fieldInputClass } from "@/components/auth/form-field";
 import { deleteAddressAction, saveAddressAction, setDefaultAddressAction, type FormState } from "@/app/(store)/account/actions";
 import { cn } from "@/lib/utils";
@@ -132,7 +133,7 @@ export function AddressBook({ addresses }: { addresses: AddressData[] }) {
                   {a.line2 ? `, ${a.line2}` : ""}
                 </span>
                 <span className="text-muted-foreground">
-                  {a.city}, {a.state} {a.zip} · {a.country}
+                  {a.city}, {a.state} – {a.zip} · {a.country === "IN" ? "India" : a.country}
                 </span>
                 {a.phone && (
                   <span className="mt-1 inline-flex items-center gap-1.5 text-muted-foreground">
@@ -169,7 +170,7 @@ export function AddressBook({ addresses }: { addresses: AddressData[] }) {
         <DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{editing ? "Edit address" : "Add a new address"}</DialogTitle>
-            <DialogDescription>We ship to all 50 states. Double-check the ZIP for accurate rates.</DialogDescription>
+            <DialogDescription>We deliver across India. Double-check the PIN code so your parcel isn’t delayed.</DialogDescription>
           </DialogHeader>
           {/* key forces a fresh form state per address */}
           <AddressForm key={editing?.id ?? "new"} address={editing} onDone={closeDialog} isFirst={addresses.length === 0} />
@@ -209,29 +210,41 @@ function AddressForm({ address, onDone, isFirst }: { address: AddressData | null
       <FormField label={<>Company <span className="font-normal text-muted-foreground">(optional)</span></>} htmlFor="company">
         <Input id="company" name="company" defaultValue={v("company")} autoComplete="organization" className={fieldInputClass} />
       </FormField>
-      <FormField label="Street address" htmlFor="line1" error={fe?.line1}>
+      <FormField label="Flat, house no., building" htmlFor="line1" error={fe?.line1}>
         <Input id="line1" name="line1" defaultValue={v("line1")} autoComplete="address-line1" className={fieldInputClass} />
       </FormField>
-      <FormField label={<>Apt, suite <span className="font-normal text-muted-foreground">(optional)</span></>} htmlFor="line2">
+      <FormField label={<>Area, street, landmark <span className="font-normal text-muted-foreground">(optional)</span></>} htmlFor="line2">
         <Input id="line2" name="line2" defaultValue={v("line2")} autoComplete="address-line2" className={fieldInputClass} />
       </FormField>
-      <div className="grid gap-4 sm:grid-cols-[1.4fr_0.8fr_1fr]">
-        <FormField label="City" htmlFor="city" error={fe?.city}>
+      <div className="grid gap-4 sm:grid-cols-[1.2fr_1.2fr_0.8fr]">
+        <FormField label="City / town" htmlFor="city" error={fe?.city}>
           <Input id="city" name="city" defaultValue={v("city")} autoComplete="address-level2" className={fieldInputClass} />
         </FormField>
         <FormField label="State" htmlFor="state" error={fe?.state}>
-          <Input id="state" name="state" defaultValue={v("state")} autoComplete="address-level1" maxLength={30} className={fieldInputClass} />
+          <select
+            id="state"
+            name="state"
+            defaultValue={findState(v("state"))?.name ?? ""}
+            autoComplete="address-level1"
+            className={`${fieldInputClass} w-full border`}
+          >
+            <option value="">Select state</option>
+            {INDIAN_STATES.map((st) => (
+              <option key={st.code} value={st.name}>{st.name}</option>
+            ))}
+          </select>
         </FormField>
-        <FormField label="ZIP" htmlFor="zip" error={fe?.zip}>
-          <Input id="zip" name="zip" defaultValue={v("zip")} autoComplete="postal-code" className={fieldInputClass} />
+        <FormField label="PIN code" htmlFor="zip" error={fe?.zip}>
+          <Input id="zip" name="zip" defaultValue={v("zip")} inputMode="numeric" maxLength={6} autoComplete="postal-code" className={fieldInputClass} />
         </FormField>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
-        <FormField label="Country" htmlFor="country" error={fe?.country}>
-          <Input id="country" name="country" defaultValue={v("country") || "US"} autoComplete="country" className={fieldInputClass} />
+        <FormField label="Country" htmlFor="country">
+          <Input id="country" value="India" readOnly disabled className={fieldInputClass} />
+          <input type="hidden" name="country" value="IN" />
         </FormField>
-        <FormField label={<>Phone <span className="font-normal text-muted-foreground">(optional)</span></>} htmlFor="phone">
-          <Input id="phone" name="phone" type="tel" defaultValue={v("phone")} autoComplete="tel" className={fieldInputClass} />
+        <FormField label="Mobile number" htmlFor="phone" error={fe?.phone}>
+          <Input id="phone" name="phone" type="tel" inputMode="numeric" placeholder="98765 43210" defaultValue={v("phone")} autoComplete="tel-national" className={fieldInputClass} />
         </FormField>
       </div>
       <label className="flex cursor-pointer items-center gap-3 text-sm">

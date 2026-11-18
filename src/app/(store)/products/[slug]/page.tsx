@@ -6,6 +6,8 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getProductBySlug, getProducts } from "@/lib/catalog";
 import { siteConfig } from "@/config/site";
+import { formatMoney } from "@/lib/format";
+import { getSettings } from "@/lib/settings";
 import { PRODUCT_TYPE_LABELS } from "@/lib/types";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -36,10 +38,11 @@ export default async function ProductPage(props: PageProps<"/products/[slug]">) 
   const product = await getProductBySlug(slug);
   if (!product) notFound();
 
-  const [user, reviews, relatedSame] = await Promise.all([
+  const [user, reviews, relatedSame, settings] = await Promise.all([
     getCurrentUser(),
     db.review.findMany({ where: { productId: product.id, status: "APPROVED" }, orderBy: { createdAt: "desc" }, take: 50 }),
     getProducts({ where: { categoryId: product.categoryId ?? undefined, id: { not: product.id } }, orderBy: { sortOrder: "asc" }, take: 4 }),
+    getSettings(),
   ]);
   const wishlisted = user ? !!(await db.wishlistItem.findUnique({ where: { userId_productId: { userId: user.id, productId: product.id } } })) : false;
   let related = relatedSame;
@@ -130,7 +133,7 @@ export default async function ProductPage(props: PageProps<"/products/[slug]">) 
           <ProductConfigurator product={product} defaultSizeId={defaultSizeId} />
           <div className="mt-6 grid grid-cols-3 gap-2 text-center text-xs text-muted-foreground">
             <div className="rounded-xl border bg-muted/30 p-3"><ShieldCheck className="mx-auto mb-1 size-5 text-primary" />Secure checkout</div>
-            <div className="rounded-xl border bg-muted/30 p-3"><Truck className="mx-auto mb-1 size-5 text-primary" />Free ship $75+</div>
+            <div className="rounded-xl border bg-muted/30 p-3"><Truck className="mx-auto mb-1 size-5 text-primary" />Free delivery {formatMoney(settings.freeShippingThreshold)}+</div>
             <div className="rounded-xl border bg-muted/30 p-3"><Droplets className="mx-auto mb-1 size-5 text-primary" />50+ wash tested</div>
           </div>
         </div>
@@ -163,7 +166,7 @@ export default async function ProductPage(props: PageProps<"/products/[slug]">) 
             ) : (
               <PressSteps
                 steps={[
-                  { icon: Thermometer, title: "300–315°F", body: "Pre-press garment 3–5 seconds to remove moisture & wrinkles." },
+                  { icon: Thermometer, title: "150–160°C", body: "Pre-press garment 3–5 seconds to remove moisture & wrinkles." },
                   { icon: Timer, title: "10–15 seconds", body: "Press with medium-firm pressure, film side up." },
                   { icon: PackageCheck, title: "Peel hot or cold", body: "Peel smoothly in one motion once the film releases." },
                   { icon: Recycle, title: "Re-press 5 seconds", body: "Cover with parchment/teflon for a soft, matte finish." },
@@ -174,9 +177,9 @@ export default async function ProductPage(props: PageProps<"/products/[slug]">) 
           </TabsContent>
           <TabsContent value="shipping" className="grid max-w-4xl gap-3 sm:grid-cols-3">
             {[
-              { t: "Production", b: product.turnaround ?? "1–3 business days", i: Timer },
-              { t: "Standard shipping", b: "3–5 business days · free over $75", i: Truck },
-              { t: "Need it faster?", b: "Rush production, express & overnight available at checkout", i: Clock },
+              { t: "Production", b: product.turnaround ?? "1–3 working days", i: Timer },
+              { t: "Standard delivery", b: `2–6 days across India · free above ${formatMoney(settings.freeShippingThreshold)}`, i: Truck },
+              { t: "Need it faster?", b: "Rush production and express delivery at checkout · Cash on Delivery available", i: Clock },
             ].map((x) => (
               <div key={x.t} className="rounded-2xl border bg-card p-5">
                 <x.i className="size-5 text-primary" />

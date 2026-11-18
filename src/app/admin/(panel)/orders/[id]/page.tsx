@@ -13,6 +13,7 @@ import { OrderProgress, OrderTimeline } from "@/components/shared/order-timeline
 import { PageHeader, Panel } from "@/components/admin/page-header";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { initials } from "@/lib/format";
+import { gstRows, paymentMethodLabel } from "@/lib/order-display";
 import { EMAIL_TEMPLATE_LABELS } from "@/lib/email/templates";
 import { EmailPreviewButton, EmailStatusPill, ResendEmailButtons } from "@/components/admin/email-ui";
 import { ArtworkActions, InternalNotesForm, NoteComposer, OrderActionsMenu, ShippingForm, StatusUpdater } from "./order-controls";
@@ -175,11 +176,15 @@ export default async function OrderDetailPage(props: PageProps<"/admin/orders/[i
               {order.couponCode && order.discount === 0 && <Row label={`Coupon (${order.couponCode})`} value="Free shipping" accent />}
               <Row label={`Shipping · ${method?.label ?? order.shippingMethod}`} value={order.shipping ? formatMoney(order.shipping) : "Free"} />
               {order.rushFee > 0 && <Row label="Rush production" value={formatMoney(order.rushFee)} />}
-              <Row label="Tax" value={formatMoney(order.tax)} />
+              {order.codFee > 0 && <Row label="Cash on Delivery fee" value={formatMoney(order.codFee)} />}
               <div className="mt-2 flex items-center justify-between border-t pt-3 text-base font-semibold">
                 <span>Total</span>
                 <span className="tabular-nums">{formatMoney(order.total)}</span>
               </div>
+              {gstRows(order.tax, settings.storeState, address.state).map((g) => (
+                <Row key={g.label} label={`${g.label} ${settings.pricesIncludeTax ? "(included)" : ""}`} value={formatMoney(g.amount)} />
+              ))}
+              {order.customerGstin && <Row label="Customer GSTIN" value={<span className="font-mono text-xs">{order.customerGstin}</span>} />}
             </dl>
           </Panel>
 
@@ -277,9 +282,9 @@ export default async function OrderDetailPage(props: PageProps<"/admin/orders/[i
                 {address.line1}
                 {address.line2 && <>, {address.line2}</>}
                 <br />
-                {address.city}, {address.state} {address.zip}
+                {address.city}, {address.state} – {address.zip}
                 <br />
-                {address.country}
+                {!address.country || address.country === "IN" ? "India" : address.country}
               </address>
             </div>
             <p className="mb-4 text-sm">
@@ -292,7 +297,7 @@ export default async function OrderDetailPage(props: PageProps<"/admin/orders/[i
           <Panel title={<span className="flex items-center gap-2"><CreditCard className="size-4 text-muted-foreground" /> Payment</span>}>
             <dl className="space-y-1.5 text-sm">
               <Row label="Status" value={<PaymentStatusBadge status={order.paymentStatus} />} />
-              <Row label="Method" value={order.paymentMethod ? order.paymentMethod.toUpperCase() : "—"} />
+              <Row label="Method" value={paymentMethodLabel(order.paymentMethod)} />
               {order.paymentRef && <Row label="Reference" value={<span className="font-mono text-xs">{order.paymentRef}</span>} />}
               <Row label="Total" value={<span className="font-semibold">{formatMoney(order.total)}</span>} />
             </dl>

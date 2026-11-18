@@ -12,7 +12,7 @@ import { Panel } from "@/components/admin/page-header";
 import { computeTotals } from "@/lib/pricing";
 import { formatMoney, slugify } from "@/lib/format";
 import type { StoreSettings } from "@/lib/types";
-import type { StripeStatus } from "@/lib/stripe-webhook";
+import { INDIAN_STATES } from "@/lib/india";
 import { ORDER_STATUS_META, type OrderStatus } from "@/lib/order-status";
 import { cn } from "@/lib/utils";
 import { saveStoreSettings, sendTestEmailAction } from "./actions";
@@ -24,7 +24,9 @@ const EMAILABLE_STATUSES: OrderStatus[] = ["ARTWORK_REVIEW", "IN_PRODUCTION", "Q
 
 type EmailInfo = { mode: "smtp" | "outbox"; host?: string; from: string };
 
-export function SettingsForm({ initial, readOnly, email, stripe }: { initial: StoreSettings; readOnly: boolean; email: EmailInfo; stripe: StripeStatus }) {
+type PaymentsInfo = { razorpay: "live" | "test" | "off"; webhook: boolean };
+
+export function SettingsForm({ initial, readOnly, email, payments }: { initial: StoreSettings; readOnly: boolean; email: EmailInfo; payments: PaymentsInfo }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [s, setS] = useState({
@@ -37,6 +39,14 @@ export function SettingsForm({ initial, readOnly, email, stripe }: { initial: St
     rushFeePct: String(initial.rushFeePct),
     announcement: initial.announcement,
     announcementEnabled: initial.announcementEnabled,
+    pricesIncludeTax: initial.pricesIncludeTax,
+    legalName: initial.legalName,
+    gstin: initial.gstin,
+    storeState: initial.storeState,
+    chargesGstRate: String(initial.chargesGstRate),
+    codEnabled: initial.codEnabled,
+    codFee: (initial.codFee / 100).toFixed(2),
+    codMaxOrder: (initial.codMaxOrder / 100).toFixed(2),
   });
   const [methods, setMethods] = useState<MethodRow[]>(
     initial.shippingMethods.map((m) => ({ id: m.id, label: m.label, description: m.description, price: (m.price / 100).toFixed(2), freeEligible: !!m.freeEligible }))
@@ -60,11 +70,19 @@ export function SettingsForm({ initial, readOnly, email, stripe }: { initial: St
     rushFeePct: Number(s.rushFeePct) || 0,
     announcement: s.announcement,
     announcementEnabled: s.announcementEnabled,
+    pricesIncludeTax: s.pricesIncludeTax,
+    legalName: s.legalName.trim(),
+    gstin: s.gstin.trim().toUpperCase(),
+    storeState: s.storeState,
+    chargesGstRate: Number(s.chargesGstRate) || 0,
+    codEnabled: s.codEnabled,
+    codFee: cents(s.codFee),
+    codMaxOrder: cents(s.codMaxOrder),
     shippingMethods: methods.map((m) => ({ id: m.id || slugify(m.label), label: m.label, description: m.description, price: cents(m.price), freeEligible: m.freeEligible })),
     notifications: { ...notif, adminEmail: notif.adminEmail.trim(), statusEmailFor: EMAILABLE_STATUSES.filter((st) => notif.statusEmailFor.includes(st)) },
   };
   // Example checkout to make the numbers tangible.
-  const example = computeTotals({ subtotal: 6000, settings: { ...initial, ...payload }, shippingMethodId: payload.shippingMethods[0]?.id, rush: true });
+  const example = computeTotals({ subtotal: 60000, settings: { ...initial, ...payload }, shippingMethodId: payload.shippingMethods[0]?.id, rush: true });
 
   return (
     <form
@@ -93,18 +111,51 @@ export function SettingsForm({ initial, readOnly, email, stripe }: { initial: St
           </div>
         </Panel>
 
-        <Panel title={<Title icon={Receipt}>Checkout</Title>} description="Tax, rush production and the free-shipping threshold.">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <F label="Tax rate (%)"><Input type="number" step="0.01" min={0} max={30} value={s.taxRate} onChange={(e) => set("taxRate", e.target.value)} /></F>
+        <Panel title={<Title icon={Receipt}>GST & invoices</Title>} description="Printed on tax invoices. Same-state orders get CGST + SGST, other states IGST.">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <F label="Registered business name"><Input value={s.legalName} onChange={(e) => set("legalName", e.target.value)} /></F>
+            <F label="GSTIN" hint="Leave blank if you're not GST-registered yet.">
+              <Input value={s.gstin} maxLength={15} placeholder="24ABCDE1234F1Z5" className="font-mono uppercase" onChange={(e) => set("gstin", e.target.value.toUpperCase())} />
+            </F>
+            <F label="State of registration">
+              <select
+                value={s.storeState}
+                onChange={(e) => set("storeState", e.target.value)}
+                className="h-8 w-full rounded-xl border bg-card px-2.5 text-sm"
+              >
+                {INDIAN_STATES.map((st) => (
+                  <option key={st.code} value={st.code}>{st.name} ({st.gst})</option>
+                ))}
+              </select>
+            </F>
+            <F label="Default GST rate (%)" hint="For products without their own rate (set per product).">
+              <Input type="number" step="0.01" min={0} max={28} value={s.taxRate} onChange={(e) => set("taxRate", e.target.value)} />
+            </F>
+            <F label="GST on shipping, rush & COD fees (%)">
+              <Input type="number" step="0.01" min={0} max={28} value={s.chargesGstRate} onChange={(e) => set("chargesGstRate", e.target.value)} />
+            </F>
+            <label className="flex items-center justify-between gap-3 self-end rounded-xl border px-3 py-2 text-sm">
+              <span>
+                <span className="block font-medium">Prices include GST</span>
+                <span className="block text-xs text-muted-foreground">Standard for selling to consumers in India.</span>
+              </span>
+              <Switch checked={s.pricesIncludeTax} onCheckedChange={(v) => set("pricesIncludeTax", v)} />
+            </label>
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">Check GST rates and HSN codes with your CA; they depend on how each product is classified.</p>
+        </Panel>
+
+        <Panel title={<Title icon={Receipt}>Checkout</Title>} description="Rush production and the free-shipping threshold.">
+          <div className="grid gap-4 sm:grid-cols-2">
             <F label="Rush fee (% of subtotal)"><Input type="number" step="1" min={0} value={s.rushFeePct} onChange={(e) => set("rushFeePct", e.target.value)} /></F>
-            <F label="Free shipping over ($)" hint="Applies to methods marked eligible.">
+            <F label="Free shipping above (₹)" hint="Applies to methods marked eligible.">
               <Input type="number" step="0.01" min={0} value={s.freeShippingThreshold} onChange={(e) => set("freeShippingThreshold", e.target.value)} />
             </F>
           </div>
           <div className="mt-4 rounded-lg border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground">
             Example: a {formatMoney(6000)} cart with rush via {payload.shippingMethods[0]?.label ?? "first method"} → shipping{" "}
             <span className="font-medium text-foreground">{example.shipping ? formatMoney(example.shipping) : "free"}</span>, rush{" "}
-            <span className="font-medium text-foreground">{formatMoney(example.rushFee)}</span>, tax <span className="font-medium text-foreground">{formatMoney(example.tax)}</span>, total{" "}
+            <span className="font-medium text-foreground">{formatMoney(example.rushFee)}</span>, GST {s.pricesIncludeTax ? "included" : "added"} <span className="font-medium text-foreground">{formatMoney(example.tax)}</span>, total{" "}
             <span className="font-semibold text-foreground">{formatMoney(example.total)}</span>.
           </div>
         </Panel>
@@ -139,9 +190,9 @@ export function SettingsForm({ initial, readOnly, email, stripe }: { initial: St
                     className="h-7 font-mono text-xs"
                   />
                 </div>
-                <Input aria-label="Description" value={m.description} placeholder="3–5 business days" onChange={(e) => setMethods((all) => all.map((x, j) => (j === i ? { ...x, description: e.target.value } : x)))} />
+                <Input aria-label="Description" value={m.description} placeholder="3–6 working days" onChange={(e) => setMethods((all) => all.map((x, j) => (j === i ? { ...x, description: e.target.value } : x)))} />
                 <div className="relative">
-                  <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+                  <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-sm text-muted-foreground">₹</span>
                   <Input aria-label="Price" type="number" step="0.01" min={0} value={m.price} onChange={(e) => setMethods((all) => all.map((x, j) => (j === i ? { ...x, price: e.target.value } : x)))} className="pl-6" />
                 </div>
                 <label className="flex items-center gap-2 text-xs text-muted-foreground md:justify-center">
@@ -156,26 +207,26 @@ export function SettingsForm({ initial, readOnly, email, stripe }: { initial: St
           </ul>
         </Panel>
 
-        <Panel title={<Title icon={CreditCard}>Payments</Title>} description="Stripe Checkout status. Keys are managed in your hosting environment variables.">
+        <Panel title={<Title icon={CreditCard}>Payments</Title>} description="Razorpay keys live in your hosting environment variables; COD rules are set here.">
           <div className="grid gap-3 text-sm sm:grid-cols-2">
             <StatusRow
-              ok={stripe.enabled}
-              label={stripe.enabled ? `Stripe connected${stripe.mode !== "unknown" ? ` · ${stripe.mode} mode` : ""}` : "Demo card payments"}
-              hint={stripe.enabled ? "Customers pay on Stripe’s secure checkout page." : "Set STRIPE_SECRET_KEY to take real payments."}
+              ok={payments.razorpay !== "off"}
+              label={payments.razorpay === "off" ? "Online payments in demo mode" : `Razorpay connected · ${payments.razorpay} mode`}
+              hint={payments.razorpay === "off" ? "Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to take UPI, card and netbanking payments." : "UPI, cards, netbanking and wallets."}
             />
-            {stripe.enabled && (
-              <StatusRow
-                ok={!!stripe.webhook}
-                label={stripe.webhook ? "Webhook connected" : "Webhook not connected"}
-                hint={
-                  stripe.webhook?.source === "env"
-                    ? "Using STRIPE_WEBHOOK_SECRET."
-                    : stripe.webhook
-                      ? `${stripe.webhook.url} · set up automatically on deploy`
-                      : "Deploy to production with NEXT_PUBLIC_SITE_URL set and it’s created automatically."
-                }
-              />
-            )}
+            <StatusRow
+              ok={payments.webhook}
+              label={payments.webhook ? "Razorpay webhook ready" : "Razorpay webhook not set"}
+              hint={payments.webhook ? "Payments are confirmed even if a customer closes the tab." : "Set RAZORPAY_WEBHOOK_SECRET and add the webhook in Razorpay."}
+            />
+          </div>
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            <label className="flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-sm">
+              <span className="font-medium">Cash on Delivery</span>
+              <Switch checked={s.codEnabled} onCheckedChange={(v) => set("codEnabled", v)} />
+            </label>
+            <F label="COD fee (₹)"><Input type="number" step="1" min={0} value={s.codFee} onChange={(e) => set("codFee", e.target.value)} /></F>
+            <F label="COD allowed up to (₹)"><Input type="number" step="1" min={0} value={s.codMaxOrder} onChange={(e) => set("codMaxOrder", e.target.value)} /></F>
           </div>
         </Panel>
 

@@ -15,10 +15,10 @@ export default async function ShippingReturnsPage() {
       title: "Production times",
       body: (
         <ul>
-          <li><strong>DTF transfers & gang sheets:</strong> same-day production for orders placed before 2pm CT on business days.</li>
-          <li><strong>UV DTF:</strong> 1–2 business days.</li>
-          <li><strong>Custom apparel:</strong> 3–4 business days.</li>
-          <li><strong>Screen print transfers:</strong> about 5 business days.</li>
+          <li><strong>DTF transfers & gang sheets:</strong> same-day production for orders placed before 2 pm IST, Monday to Saturday.</li>
+          <li><strong>UV DTF:</strong> 1–2 working days.</li>
+          <li><strong>Custom apparel:</strong> 3–4 working days.</li>
+          <li><strong>Screen print transfers:</strong> about 5 working days.</li>
           <li><strong>Rush production:</strong> +{settings.rushFeePct}% of subtotal — printed first in the queue.</li>
         </ul>
       ),
@@ -36,19 +36,31 @@ export default async function ShippingReturnsPage() {
               </li>
             ))}
           </ul>
-          <p>Delivery estimates start once your order ships, not when it&apos;s placed. Tracking is emailed and shown in your account.</p>
+          <p>We deliver to most serviceable PIN codes across India through Delhivery, Blue Dart and India Post. Metro cities usually receive orders in 2–3 days; other locations in 4–6 days. Delivery estimates start once your order ships, not when it&apos;s placed. Tracking (AWB) is emailed and shown in your account.</p>
         </>
       ),
     },
     {
+      id: "cod",
+      title: "Cash on Delivery",
+      body: settings.codEnabled ? (
+        <p>
+          Cash on Delivery is available on orders up to {formatMoney(settings.codMaxOrder)}
+          {settings.codFee ? ` for a handling fee of ${formatMoney(settings.codFee)}` : ""}. Pay the courier by cash or UPI when your parcel arrives. Repeatedly refused COD parcels may lose COD eligibility.
+        </p>
+      ) : (
+        <p>Cash on Delivery is currently unavailable. Pay securely online with UPI, cards, netbanking or wallets.</p>
+      ),
+    },
+    {
       id: "pickup",
-      title: "Local pickup",
-      body: <p>Choose Local pickup at checkout and collect from {siteConfig.contact.address} during business hours ({siteConfig.contact.hours}). We&apos;ll email you when it&apos;s ready.</p>,
+      title: "Studio pickup",
+      body: <p>Choose Studio pickup at checkout and collect from {siteConfig.contact.address} during business hours ({siteConfig.contact.hours}). We&apos;ll email you when it&apos;s ready.</p>,
     },
     {
       id: "reprints",
       title: "Damaged or defective prints",
-      body: <p>If anything arrives damaged or with a printing defect, contact us within 14 days of delivery with your order number and photos. We&apos;ll reprint the affected items free of charge or issue a refund.</p>,
+      body: <p>If anything arrives damaged or with a printing defect, contact us within 14 days of delivery with your order number and photos. We&apos;ll reprint the affected items free of charge or issue a refund. Refunds go back to the original payment method (UPI, card or bank) within 5–7 working days; COD orders are refunded to your bank account or UPI ID.</p>,
     },
     {
       id: "returns",
@@ -63,7 +75,7 @@ export default async function ShippingReturnsPage() {
     {
       id: "lost",
       title: "Lost packages",
-      body: <p>If tracking shows no movement for 5 business days, or a package is marked delivered but not received, let us know and we&apos;ll open a claim with the carrier and arrange a replacement where appropriate.</p>,
+      body: <p>If tracking shows no movement for 5 working days, or a package is marked delivered but not received, let us know and we&apos;ll open a claim with the courier and arrange a replacement where appropriate.</p>,
     },
   ];
   return (
@@ -71,7 +83,7 @@ export default async function ShippingReturnsPage() {
       eyebrow="Policies"
       title="Shipping & returns"
       description="Production times, delivery options, and what happens if something isn't right."
-      updated="November 1, 2026"
+      updated="18 November 2026"
       sections={sections}
     />
   );

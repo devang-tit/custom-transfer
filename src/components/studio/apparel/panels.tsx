@@ -516,7 +516,7 @@ export function OrderPanel({
             <button type="button" className="grid size-6 place-items-center rounded-md hover:bg-muted" onClick={() => set(o.size, (sizes[o.size] ?? 0) + 1)} aria-label={`More ${o.size}`}>
               <Plus className="size-3" />
             </button>
-            {o.upcharge > 0 && <span className="text-[10px] text-muted-foreground">+{formatMoney(o.upcharge).replace(".00", "")}</span>}
+            {o.upcharge > 0 && <span className="text-[10px] text-muted-foreground">+{formatMoney(o.upcharge)}</span>}
           </div>
         ))}
       </div>

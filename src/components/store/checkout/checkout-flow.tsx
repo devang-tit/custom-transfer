@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { Check, ChevronLeft, CreditCard, Flame, Lock, LoaderCircle, Mail, MapPin, Pencil, ShieldCheck, ShoppingBag, Truck, Info } from "lucide-react";
+import { Banknote, Check, ChevronLeft, CreditCard, Flame, Lock, LoaderCircle, Mail, MapPin, Pencil, ShieldCheck, ShoppingBag, Smartphone, Truck, Info } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,12 +16,13 @@ import { computeTotals } from "@/lib/pricing";
 import { formatMoney } from "@/lib/format";
 import type { AddressInput, StoreSettings } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { placeOrder } from "@/app/(store)/_actions/checkout";
+import { confirmRazorpayPayment, placeOrder, type RazorpayCheckout } from "@/app/(store)/_actions/checkout";
+import { INDIAN_STATES, isValidGstin, isValidPin, normalizeIndianMobile } from "@/lib/india";
 import { useHydrated } from "../use-hydrated";
 import { CouponInput } from "./coupon-input";
 import { TotalsTable } from "./totals";
 import { useCoupon } from "./use-coupon";
-import { cardBrand, formatCardNumber, formatExpiry, luhnValid, expiryValid } from "./card-utils";
+import { loadRazorpay, openRazorpay } from "./razorpay";
 import { PaymentBadges } from "../social-icons";
 
 type Prefill = { email: string; name: string; phone: string; address: Partial<AddressInput> | null; signedIn: boolean };
@@ -33,7 +34,10 @@ const STEPS = [
   { id: "payment", label: "Payment", icon: CreditCard },
 ] as const;
 
-export function CheckoutFlow({ settings, prefill, stripe, canceled }: { settings: StoreSettings; prefill: Prefill; stripe: boolean; canceled?: string }) {
+type PayMethod = "online" | "cod";
+
+/** `razorpay`: Razorpay keys are configured (otherwise online payment runs in demo mode). */
+export function CheckoutFlow({ settings, prefill, razorpay }: { settings: StoreSettings; prefill: Prefill; razorpay: boolean }) {
   const hydrated = useHydrated();
   const router = useRouter();
   const items = useCart((s) => s.items);
@@ -52,17 +56,19 @@ export function CheckoutFlow({ settings, prefill, stripe, canceled }: { settings
     city: prefill.address?.city ?? "",
     state: prefill.address?.state ?? "",
     zip: prefill.address?.zip ?? "",
-    country: prefill.address?.country ?? "US",
+    country: "IN",
   });
+  const [gstin, setGstin] = useState("");
+  const [payMethod, setPayMethod] = useState<PayMethod>("online");
+  const [pendingRzp, setPendingRzp] = useState<RazorpayCheckout | null>(null);
   const [shippingMethod, setShippingMethod] = useState(settings.shippingMethods[0]?.id ?? "standard");
   const [rush, setRush] = useState(false);
   const [notes, setNotes] = useState("");
-  const [card, setCard] = useState({ number: "", expiry: "", cvc: "", name: "" });
   const [pending, start] = useTransition();
 
   const totals = useMemo(
-    () => computeTotals({ subtotal, settings, shippingMethodId: shippingMethod, coupon, rush }),
-    [subtotal, settings, shippingMethod, coupon, rush]
+    () => computeTotals({ subtotal, settings, shippingMethodId: shippingMethod, coupon, rush, cod: payMethod === "cod" }),
+    [subtotal, settings, shippingMethod, coupon, rush, payMethod]
   );
 
   if (!hydrated) return <div className="container-page min-h-[60vh] py-16"><div className="h-10 w-56 animate-pulse rounded-xl bg-muted" /></div>;
@@ -84,16 +90,18 @@ export function CheckoutFlow({ settings, prefill, stripe, canceled }: { settings
     if (i === 0) {
       if (!/^\S+@\S+\.\S+$/.test(contact.email)) e.email = "Enter a valid email";
       if (contact.name.trim().length < 2) e.name = "Enter your full name";
+      if (!normalizeIndianMobile(contact.phone)) e.phone = "Enter a valid 10-digit mobile number";
     }
     if (i === 1) {
       (["name", "line1", "city", "state", "zip"] as const).forEach((k) => {
         if (!String(address[k] ?? "").trim()) e[`address.${k}`] = "Required";
       });
+      if (address.zip && !isValidPin(address.zip)) e["address.zip"] = "Enter a 6-digit PIN code";
+      if (gstin.trim() && !isValidGstin(gstin)) e.gstin = "Enter a valid 15-character GSTIN";
     }
-    if (i === 3 && !stripe) {
-      if (!luhnValid(card.number)) e.cardNumber = "Invalid card number";
-      if (!expiryValid(card.expiry)) e.expiry = "Invalid expiry";
-      if (!/^\d{3,4}$/.test(card.cvc)) e.cvc = "Invalid CVC";
+    if (i === 3 && payMethod === "cod") {
+      if (!settings.codEnabled) e.payMethod = "Cash on Delivery isn’t available";
+      else if (totals.total > settings.codMaxOrder) e.payMethod = `COD is available up to ${formatMoney(settings.codMaxOrder)}. Please pay online.`;
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -105,14 +113,57 @@ export function CheckoutFlow({ settings, prefill, stripe, canceled }: { settings
     setStep(i + 1);
   };
 
+  /** Opens Razorpay for an order; on success verifies the payment and goes to the confirmation page. */
+  async function payOnline(rzp: RazorpayCheckout) {
+    if (!(await loadRazorpay())) {
+      toast.error("Couldn’t load the payment window. Check your connection and try again.");
+      setPendingRzp(rzp);
+      return;
+    }
+    const result = await openRazorpay(
+      {
+        key: rzp.keyId,
+        amount: rzp.amount,
+        currency: rzp.currency,
+        name: rzp.name,
+        description: rzp.description,
+        order_id: rzp.orderId,
+        prefill: rzp.prefill,
+        theme: { color: "#000000" },
+      },
+      (message) => toast.error(message)
+    );
+    if (result.status === "dismissed") {
+      setPendingRzp(rzp);
+      toast.info(`Payment not completed. Order ${rzp.orderNumber} is saved — tap Pay to try again.`);
+      return;
+    }
+    const confirmed = await confirmRazorpayPayment({
+      orderNumber: rzp.orderNumber,
+      razorpayOrderId: result.response.razorpay_order_id,
+      razorpayPaymentId: result.response.razorpay_payment_id,
+      razorpaySignature: result.response.razorpay_signature,
+    });
+    if (!confirmed.ok) {
+      toast.error(confirmed.error);
+      return;
+    }
+    router.push(confirmed.url);
+  }
+
   const submit = () => {
     if (!validate(0)) return setStep(0);
     if (!validate(1)) return setStep(1);
     if (!validate(3)) return;
     start(async () => {
+      if (pendingRzp && payMethod === "online") {
+        await payOnline(pendingRzp);
+        return;
+      }
       const res = await placeOrder({
-        contact: { email: contact.email, name: contact.name, phone: contact.phone || undefined },
-        address: { ...address, company: address.company || undefined, line2: address.line2 || undefined },
+        contact: { email: contact.email, name: contact.name, phone: contact.phone },
+        address: { ...address, country: "IN", company: address.company || undefined, line2: address.line2 || undefined },
+        gstin: gstin.trim() || undefined,
         shippingMethod,
         rush,
         notes: notes || undefined,
@@ -126,18 +177,18 @@ export function CheckoutFlow({ settings, prefill, stripe, canceled }: { settings
           image: i.image,
           notes: i.notes,
         })),
-        payment: stripe ? { method: "stripe" } : { method: "demo", cardNumber: card.number.replace(/\s/g, ""), expiry: card.expiry.replace(/\s/g, ""), cvc: card.cvc },
+        payment: { method: payMethod === "cod" ? "cod" : razorpay ? "razorpay" : "demo" },
       });
       if (!res.ok) {
         toast.error(res.error);
         const f = res.field ?? "";
         if (f.startsWith("contact")) setStep(0);
-        else if (f.startsWith("address")) setStep(1);
+        else if (f.startsWith("address") || f === "gstin") setStep(1);
         else if (f === "shippingMethod") setStep(2);
-        else if (f.startsWith("payment")) setErrors({ [f.replace("payment.", "")]: res.error });
+        else if (f.startsWith("payment")) setErrors({ payMethod: res.error });
         return;
       }
-      if (res.external) window.location.href = res.url;
+      if ("razorpay" in res) await payOnline(res.razorpay);
       else router.push(res.url);
     });
   };
@@ -152,12 +203,6 @@ export function CheckoutFlow({ settings, prefill, stripe, canceled }: { settings
       </div>
       <h1 className="mt-4 text-4xl font-bold">Checkout</h1>
 
-      {canceled && (
-        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm">
-          <Info className="mt-0.5 size-4 shrink-0 text-amber-600" />
-          <p>Payment for order <strong>{canceled}</strong> was canceled. Your cart is still here — you can try again whenever you’re ready.</p>
-        </div>
-      )}
 
       <ol className="mt-8 grid grid-cols-4 gap-2">
         {STEPS.map((s, i) => (
@@ -194,8 +239,11 @@ export function CheckoutFlow({ settings, prefill, stripe, canceled }: { settings
               <Field label="Full name" error={errors.name}>
                 <Input autoComplete="name" value={contact.name} onChange={(e) => { const v = e.target.value; setContact((prev) => ({ ...prev, name: v })); }} className="h-11 rounded-xl" />
               </Field>
-              <Field label="Phone (optional)">
-                <Input type="tel" autoComplete="tel" value={contact.phone} onChange={(e) => { const v = e.target.value; setContact((prev) => ({ ...prev, phone: v })); }} className="h-11 rounded-xl" />
+              <Field label="Mobile number" error={errors.phone}>
+                <div className="flex">
+                  <span className="grid h-11 place-items-center rounded-l-xl border border-r-0 bg-muted px-3 text-sm text-muted-foreground">+91</span>
+                  <Input type="tel" inputMode="numeric" autoComplete="tel-national" placeholder="98765 43210" value={contact.phone} onChange={(e) => { const v = e.target.value; setContact((prev) => ({ ...prev, phone: v })); }} className="h-11 rounded-l-none rounded-r-xl" />
+                </div>
               </Field>
             </div>
             <StepActions onNext={() => next(0)} />
@@ -207,7 +255,7 @@ export function CheckoutFlow({ settings, prefill, stripe, canceled }: { settings
             step={step}
             title="Shipping address"
             onEdit={() => setStep(1)}
-            summary={<>{address.line1}{address.line2 ? `, ${address.line2}` : ""}, {address.city}, {address.state} {address.zip}</>}
+            summary={<>{address.line1}{address.line2 ? `, ${address.line2}` : ""}, {address.city}, {address.state} – {address.zip}</>}
           >
             <div className="grid gap-4 sm:grid-cols-6">
               <Field label="Recipient name" error={errors["address.name"]} className="sm:col-span-3">
@@ -216,30 +264,36 @@ export function CheckoutFlow({ settings, prefill, stripe, canceled }: { settings
               <Field label="Company (optional)" className="sm:col-span-3">
                 <Input autoComplete="shipping organization" value={address.company} onChange={(e) => { const v = e.target.value; setAddress((prev) => ({ ...prev, company: v })); }} className="h-11 rounded-xl" />
               </Field>
-              <Field label="Street address" error={errors["address.line1"]} className="sm:col-span-4">
+              <Field label="Flat, house no., building" error={errors["address.line1"]} className="sm:col-span-6">
                 <Input autoComplete="shipping address-line1" value={address.line1} onChange={(e) => { const v = e.target.value; setAddress((prev) => ({ ...prev, line1: v })); }} className="h-11 rounded-xl" />
               </Field>
-              <Field label="Apt / suite" className="sm:col-span-2">
+              <Field label="Area, street, landmark (optional)" className="sm:col-span-6">
                 <Input autoComplete="shipping address-line2" value={address.line2} onChange={(e) => { const v = e.target.value; setAddress((prev) => ({ ...prev, line2: v })); }} className="h-11 rounded-xl" />
               </Field>
-              <Field label="City" error={errors["address.city"]} className="sm:col-span-2">
+              <Field label="City / town" error={errors["address.city"]} className="sm:col-span-2">
                 <Input autoComplete="shipping address-level2" value={address.city} onChange={(e) => { const v = e.target.value; setAddress((prev) => ({ ...prev, city: v })); }} className="h-11 rounded-xl" />
               </Field>
-              <Field label="State" error={errors["address.state"]} className="sm:col-span-1">
-                <Input autoComplete="shipping address-level1" value={address.state} maxLength={30} onChange={(e) => { const v = e.target.value; setAddress((prev) => ({ ...prev, state: v })); }} className="h-11 rounded-xl" />
-              </Field>
-              <Field label="ZIP" error={errors["address.zip"]} className="sm:col-span-1">
-                <Input autoComplete="shipping postal-code" value={address.zip} onChange={(e) => { const v = e.target.value; setAddress((prev) => ({ ...prev, zip: v })); }} className="h-11 rounded-xl" />
-              </Field>
-              <Field label="Country" className="sm:col-span-2">
+              <Field label="State" error={errors["address.state"]} className="sm:col-span-2">
                 <select
-                  value={address.country}
-                  onChange={(e) => { const v = e.target.value; setAddress((prev) => ({ ...prev, country: v })); }}
+                  value={address.state}
+                  autoComplete="shipping address-level1"
+                  onChange={(e) => { const v = e.target.value; setAddress((prev) => ({ ...prev, state: v })); }}
                   className="h-11 w-full rounded-xl border bg-transparent px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/40 dark:bg-input/30"
                 >
-                  <option value="US">United States</option>
-                  <option value="CA">Canada</option>
+                  <option value="">Select state</option>
+                  {INDIAN_STATES.map((st) => (
+                    <option key={st.code} value={st.name}>{st.name}</option>
+                  ))}
                 </select>
+              </Field>
+              <Field label="PIN code" error={errors["address.zip"]} className="sm:col-span-2">
+                <Input inputMode="numeric" autoComplete="shipping postal-code" maxLength={6} placeholder="380054" value={address.zip} onChange={(e) => { const v = e.target.value.replace(/\D/g, ""); setAddress((prev) => ({ ...prev, zip: v })); }} className="h-11 rounded-xl tabular-nums" />
+              </Field>
+              <Field label="GSTIN (optional, for a business invoice)" error={errors.gstin} className="sm:col-span-4">
+                <Input autoCapitalize="characters" maxLength={15} placeholder="24ABCDE1234F1Z5" value={gstin} onChange={(e) => setGstin(e.target.value.toUpperCase())} className="h-11 rounded-xl font-mono uppercase" />
+              </Field>
+              <Field label="Country" className="sm:col-span-2">
+                <Input value="India" readOnly disabled className="h-11 rounded-xl" />
               </Field>
             </div>
             <StepActions onBack={() => setStep(0)} onNext={() => next(1)} />
@@ -286,51 +340,49 @@ export function CheckoutFlow({ settings, prefill, stripe, canceled }: { settings
 
           {/* Payment */}
           <StepCard index={3} step={step} title="Payment" onEdit={() => setStep(3)} summary={null}>
-            {stripe ? (
-              <div className="flex items-start gap-3 rounded-2xl border bg-muted/40 p-4 text-sm">
-                <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" />
-                <p>You’ll be redirected to <strong>Stripe</strong> to pay securely with card, Apple Pay or Google Pay. Your order is confirmed as soon as payment succeeds.</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <PayOption
+                active={payMethod === "online"}
+                onSelect={() => { setPayMethod("online"); setErrors({}); }}
+                icon={Smartphone}
+                title="Pay online"
+                detail="UPI, cards, netbanking & wallets"
+                note={razorpay ? "Secured by Razorpay" : "Demo mode: no real payment"}
+              />
+              <PayOption
+                active={payMethod === "cod"}
+                disabled={!settings.codEnabled}
+                onSelect={() => { setPayMethod("cod"); setErrors({}); }}
+                icon={Banknote}
+                title="Cash on Delivery"
+                detail={settings.codFee ? `+${formatMoney(settings.codFee)} COD fee` : "No extra fee"}
+                note={settings.codEnabled ? `For orders up to ${formatMoney(settings.codMaxOrder)}` : "Not available"}
+              />
+            </div>
+            {errors.payMethod && <p className="text-sm text-destructive">{errors.payMethod}</p>}
+            {payMethod === "online" && !razorpay && (
+              <div className="flex items-start gap-3 rounded-2xl border p-3.5 text-xs">
+                <Info className="mt-0.5 size-4 shrink-0" />
+                <p>
+                  <strong>Demo mode:</strong> online payments aren’t connected yet, so this places a test order marked as paid. Add your Razorpay keys to take real payments.
+                </p>
               </div>
-            ) : (
-              <>
-                <div className="flex items-start gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-3.5 text-xs">
-                  <Info className="mt-0.5 size-4 shrink-0 text-primary" />
-                  <p>
-                    <strong>Demo mode</strong> — no real charge. Use <code className="rounded bg-background px-1 py-0.5 font-mono">4242 4242 4242 4242</code>, any future date and any CVC.
-                    Use <code className="rounded bg-background px-1 py-0.5 font-mono">4000 0000 0000 0002</code> to simulate a decline.
-                  </p>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-4">
-                  <Field label="Card number" error={errors.cardNumber} className="sm:col-span-4">
-                    <div className="relative">
-                      <Input
-                        inputMode="numeric"
-                        autoComplete="cc-number"
-                        placeholder="1234 1234 1234 1234"
-                        value={card.number}
-                        onChange={(e) => { const v = formatCardNumber(e.target.value); setCard((prev) => ({ ...prev, number: v })); }}
-                        className="h-11 rounded-xl pr-24 font-mono tracking-wider"
-                      />
-                      <span className="absolute top-1/2 right-3 -translate-y-1/2 rounded-md bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
-                        {card.number ? cardBrand(card.number) : "Card"}
-                      </span>
-                    </div>
-                  </Field>
-                  <Field label="Name on card" className="sm:col-span-2">
-                    <Input autoComplete="cc-name" value={card.name} onChange={(e) => { const v = e.target.value; setCard((prev) => ({ ...prev, name: v })); }} className="h-11 rounded-xl" />
-                  </Field>
-                  <Field label="Expiry" error={errors.expiry}>
-                    <Input inputMode="numeric" autoComplete="cc-exp" placeholder="MM / YY" value={card.expiry} onChange={(e) => { const v = formatExpiry(e.target.value); setCard((prev) => ({ ...prev, expiry: v })); }} className="h-11 rounded-xl font-mono" />
-                  </Field>
-                  <Field label="CVC" error={errors.cvc}>
-                    <Input inputMode="numeric" autoComplete="cc-csc" placeholder="123" maxLength={4} value={card.cvc} onChange={(e) => { const v = e.target.value.replace(/\D/g, ""); setCard((prev) => ({ ...prev, cvc: v })); }} className="h-11 rounded-xl font-mono" />
-                  </Field>
-                </div>
-              </>
             )}
-            <Button onClick={submit} disabled={pending} className="h-13 w-full rounded-2xl text-base shadow-glow">
-              {pending ? <LoaderCircle className="size-5 animate-spin" /> : <Lock className="size-4.5" />}
-              {pending ? "Placing your order…" : stripe ? `Continue to secure payment · ${formatMoney(totals.total)}` : `Pay ${formatMoney(totals.total)}`}
+            {payMethod === "online" && razorpay && (
+              <div className="flex items-start gap-3 rounded-2xl border p-3.5 text-xs text-muted-foreground">
+                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-foreground" />
+                <p>A secure Razorpay window opens to complete your payment. Your order is confirmed as soon as the payment succeeds.</p>
+              </div>
+            )}
+            <Button onClick={submit} disabled={pending} className="h-13 w-full rounded-2xl text-base">
+              {pending ? <LoaderCircle className="size-5 animate-spin" /> : payMethod === "cod" ? <Banknote className="size-4.5" /> : <Lock className="size-4.5" />}
+              {pending
+                ? "Placing your order…"
+                : payMethod === "cod"
+                  ? `Place order · pay ${formatMoney(totals.total)} on delivery`
+                  : pendingRzp
+                    ? `Retry payment · ${formatMoney(pendingRzp.amount)}`
+                    : `Pay ${formatMoney(totals.total)}`}
             </Button>
             <p className="text-center text-xs text-muted-foreground">
               By placing your order you agree to our <Link href="/terms" className="underline">Terms</Link> and <Link href="/shipping-returns" className="underline">Shipping & Returns</Link> policy.
@@ -361,7 +413,7 @@ export function CheckoutFlow({ settings, prefill, stripe, canceled }: { settings
               ))}
             </ul>
             <CouponInput subtotal={subtotal} error={couponError} description={description} />
-            <TotalsTable totals={totals} shippingLabel={method?.label ?? "Shipping"} taxRate={settings.taxRate} />
+            <TotalsTable totals={totals} shippingLabel={method?.label ?? "Shipping"} />
             <PaymentBadges className="flex justify-center" />
           </div>
         </aside>
@@ -416,6 +468,47 @@ function StepCard({
         )}
       </AnimatePresence>
     </section>
+  );
+}
+
+function PayOption({
+  active,
+  disabled,
+  onSelect,
+  icon: Icon,
+  title,
+  detail,
+  note,
+}: {
+  active: boolean;
+  disabled?: boolean;
+  onSelect: () => void;
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  detail: string;
+  note: string;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onSelect}
+      aria-pressed={active}
+      className={cn(
+        "flex items-start gap-3 rounded-2xl border bg-card p-4 text-left transition-all hover:border-foreground/60 disabled:cursor-not-allowed disabled:opacity-50",
+        active && "border-foreground ring-1 ring-foreground"
+      )}
+    >
+      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-muted"><Icon className="size-5" /></span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-semibold">{title}</span>
+        <span className="block text-xs text-muted-foreground">{detail}</span>
+        <span className="mt-1 block text-[11px] text-muted-foreground">{note}</span>
+      </span>
+      <span className={cn("mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border", active ? "border-foreground bg-foreground" : "border-input")}>
+        {active && <span className="size-1.5 rounded-full bg-background" />}
+      </span>
+    </button>
   );
 }
 

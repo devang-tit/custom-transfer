@@ -20,6 +20,9 @@ export type ProductDTO = {
   tiers: PriceTier[];
   features: string[];
   badge: string | null;
+  hsnCode: string | null;
+  /** GST % (null = store default) */
+  gstRate: number | null;
   turnaround: string | null;
   stock: number | null;
   featured: boolean;
@@ -49,6 +52,8 @@ export function toProductDTO(
     tiers: parseJson<PriceTier[]>(p.tiers, []),
     features: parseJson<string[]>(p.features, []),
     badge: p.badge,
+    hsnCode: p.hsnCode,
+    gstRate: p.gstRate,
     turnaround: p.turnaround,
     stock: p.stock,
     featured: p.featured,

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
 import { saveSettings } from "@/lib/settings";
 import { ORDER_STATUSES } from "@/lib/order-status";
+import { findState, isValidGstin } from "@/lib/india";
 import { sendTestEmail } from "@/lib/email/notify";
 
 type Result = { ok: true; message?: string } | { ok: false; error: string };
@@ -14,7 +15,15 @@ const schema = z.object({
   supportEmail: z.email("Enter a valid support email"),
   supportPhone: z.string().trim().max(40),
   orderPrefix: z.string().trim().min(1).max(6).regex(/^[A-Z0-9]+$/, "Order prefix: uppercase letters/numbers only"),
-  taxRate: z.number().min(0).max(30),
+  taxRate: z.number().min(0).max(28),
+  pricesIncludeTax: z.boolean(),
+  legalName: z.string().trim().max(120),
+  gstin: z.string().trim().toUpperCase().refine((v) => !v || isValidGstin(v), "Enter a valid 15-character GSTIN"),
+  storeState: z.string().refine((v) => !!findState(v), "Choose your state"),
+  chargesGstRate: z.number().min(0).max(28),
+  codEnabled: z.boolean(),
+  codFee: z.number().int().min(0),
+  codMaxOrder: z.number().int().min(0),
   freeShippingThreshold: z.number().int().min(0),
   rushFeePct: z.number().min(0).max(200),
   announcement: z.string().trim().max(200),

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 export function CtaBand({
   title = "Ready to press something amazing?",
-  description = "Upload your art or build a gang sheet in minutes. Orders placed before 2pm CT ship the same day.",
+  description = "Upload your art or build a gang sheet in minutes. Orders placed before 2 pm IST ship the same day.",
   primary = { href: "/gang-sheet-builder", label: "Build a gang sheet" },
   secondary = { href: "/shop", label: "Shop transfers" },
 }: {

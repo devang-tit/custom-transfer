@@ -1,16 +1,15 @@
 import { siteConfig } from "@/config/site";
 
-const moneyFmt = new Intl.NumberFormat(siteConfig.locale, {
-  style: "currency",
-  currency: siteConfig.currency,
-});
+const moneyFmt = new Intl.NumberFormat(siteConfig.locale, { style: "currency", currency: siteConfig.currency });
+const moneyWholeFmt = new Intl.NumberFormat(siteConfig.locale, { style: "currency", currency: siteConfig.currency, minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
-/** Format integer cents as currency, e.g. 1299 -> "$12.99" */
-export function formatMoney(cents: number | null | undefined): string {
-  return moneyFmt.format((cents ?? 0) / 100);
+/** Format integer paise as rupees: 7900 -> "₹79", 12345 -> "₹123.45", 12345600 -> "₹1,23,456". */
+export function formatMoney(paise: number | null | undefined): string {
+  const value = (paise ?? 0) / 100;
+  return (Number.isInteger(value) ? moneyWholeFmt : moneyFmt).format(value);
 }
 
-/** Compact money for charts/KPIs: 1234500 -> "$12.3K" */
+/** Compact money for charts/KPIs: 12345600 -> "₹1.2L" */
 export function formatMoneyCompact(cents: number): string {
   return new Intl.NumberFormat(siteConfig.locale, {
     style: "currency",
@@ -26,14 +25,15 @@ export function formatNumber(n: number): string {
 
 export function formatDate(d: Date | string, opts?: Intl.DateTimeFormatOptions): string {
   const date = typeof d === "string" ? new Date(d) : d;
-  return date.toLocaleDateString(siteConfig.locale, opts ?? { month: "short", day: "numeric", year: "numeric" });
+  return date.toLocaleDateString(siteConfig.locale, { timeZone: siteConfig.timeZone, ...(opts ?? { day: "numeric", month: "short", year: "numeric" }) });
 }
 
 export function formatDateTime(d: Date | string): string {
   const date = typeof d === "string" ? new Date(d) : d;
   return date.toLocaleString(siteConfig.locale, {
-    month: "short",
+    timeZone: siteConfig.timeZone,
     day: "numeric",
+    month: "short",
     year: "numeric",
     hour: "numeric",
     minute: "2-digit",

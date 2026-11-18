@@ -21,13 +21,14 @@ A full-stack e-commerce platform for a custom DTF transfer and t-shirt printing 
 - **Cart and checkout:**
   - cart drawer and cart page, coupons, free-shipping progress
   - multi-step checkout with rush production and shipping methods
-  - Stripe Checkout, or a built-in demo payment
+  - Razorpay (UPI, RuPay/cards, netbanking, wallets), Cash on Delivery, or a built-in demo payment
+  - built for India: ₹ prices with GST included, Indian states and PIN codes, +91 mobile numbers, IST times
 - **Order tracking:** look up an order by number + email.
 - **Order emails:** order confirmation, status updates (including a shipped email with a tracking link), artwork change requests and team updates.
 - **Password reset by email:** single-use links that expire after 1 hour, plus a "your password was changed" security notice.
 - **Customer account:**
   - dashboard, orders with timeline, artwork status and reorder
-  - printable invoices, saved designs, wishlist, addresses, profile and password
+  - printable GST tax invoices (HSN, CGST/SGST or IGST, amount in words), saved designs, wishlist, addresses, profile and password
 - **Content pages:** pricing tables (pulled live from the catalog), FAQ, contact form, about, heat-press instructions, legal pages.
 
 ### Admin panel (`/admin`)
@@ -36,14 +37,14 @@ A full-stack e-commerce platform for a custom DTF transfer and t-shirt printing 
 - Orders:
   - status tabs, search, filters, bulk status updates, CSV export
   - order detail with artwork approval, status updates with customer notifications, tracking, internal notes
-  - invoice and packing slip printing
+  - GST tax invoice and packing slip printing
 - Production board: a drag-and-drop kanban (artwork review → production → QC → ready → shipped).
-- Catalog: products (sizes, finishes, quantity tiers, apparel options, media, inventory), categories, review moderation.
+- Catalog: products (sizes, finishes, quantity tiers, apparel options, media, inventory, HSN code and GST rate), categories, review moderation.
 - Customers: lifetime value, order history, roles.
 - Coupons: percent, fixed and free shipping, with limits and schedules.
 - Inbox for contact messages.
 - Email notifications: per-email on/off toggles, a new-order alert for your team, a test-email button, an **Email log** with previews, and resend from any order.
-- Store settings: tax, shipping methods, rush fee, free-shipping threshold, announcement bar.
+- Store settings: GST (legal name, GSTIN, state, default rate, prices include GST), Cash on Delivery (fee, order limit), shipping methods, rush fee, free-shipping threshold, announcement bar.
 
 ## Tech stack
 
@@ -56,7 +57,7 @@ A full-stack e-commerce platform for a custom DTF transfer and t-shirt printing 
 | Auth | JWT session cookie (jose) + bcrypt, role-based (CUSTOMER / STAFF / ADMIN), route protection in `src/proxy.ts` |
 | Editors | Konva / react-konva |
 | Charts | Recharts |
-| Payments | Stripe Checkout (optional) or the built-in demo payment |
+| Payments | Razorpay (optional), Cash on Delivery, or the built-in demo payment |
 
 ## Getting started
 
@@ -105,9 +106,9 @@ Demo coupons: `WELCOME10`, `FREESHIP`, `BULK25`, `GANG15`.
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob token for uploads. Set automatically when a Blob store is connected; leave empty locally |
 | `SEED_ADMIN_PASSWORD` | Admin password for the first seed of a remote database (demo passwords only work locally) |
 | `AUTH_SECRET` | Secret used to sign session cookies. **Required**, at least 16 characters |
-| `NEXT_PUBLIC_SITE_URL` | Public URL of the site (used for metadata and Stripe redirects) |
-| `STRIPE_SECRET_KEY` | Optional. Enables real Stripe Checkout |
-| `STRIPE_WEBHOOK_SECRET` | Optional. Verifies Stripe webhooks at `/api/stripe/webhook` |
+| `NEXT_PUBLIC_SITE_URL` | Public URL of the site (used for metadata and email links) |
+| `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` | Optional. Enable Razorpay online payments. Without them, checkout offers a demo payment |
+| `RAZORPAY_WEBHOOK_SECRET` | Optional but recommended. Verifies Razorpay webhooks at `/api/razorpay/webhook` |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` | Optional. SMTP server for order emails. Without `SMTP_HOST`, emails go to the dev outbox |
 | `EMAIL_FROM` | Sender, e.g. `InkForge <orders@your-domain.com>` |
 
@@ -129,18 +130,26 @@ On a remote database, the demo staff and customer accounts get random passwords,
 
 **Schema changes:** edit `prisma/schema.prisma`, run `npm run db:migrate -- --name what-changed` against your dev database, then commit the new migration folder. The next deploy applies it.
 
+**Resetting demo data on a live database:** when the demo data changes shape, `prisma/seed.ts` bumps `DATA_VERSION` (currently `india-v1`). Setting `RESET_DEMO_DATA` to that value on Vercel (Production) makes the next deploy **wipe all data** and reload the demo store, once: the seed then records the version and skips on later deploys. Remove the variable afterwards.
+
 **Never point your local `.env` at the live database.** `npm run db:reset` wipes whatever `DATABASE_URL` points to.
 
-### Enable Stripe
-Set `STRIPE_SECRET_KEY` (and the publishable keys). Without a key, checkout uses the demo payment form.
+### Payments (Razorpay + Cash on Delivery)
+1. In the Razorpay Dashboard, open **Account & Settings → API Keys** and generate a key pair. Add `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` on Vercel (Production), then redeploy. Use `rzp_test_…` keys first; switch to `rzp_live_…` after KYC.
+2. Open **Webhooks → Add new webhook**:
+   - URL: `https://<your-site>/api/razorpay/webhook`
+   - Secret: any long random string; save the same value as `RAZORPAY_WEBHOOK_SECRET`
+   - Events: `payment.captured`, `order.paid`, `payment.failed`
+3. **Admin → Settings → Payments** shows whether Razorpay (test/live) and the webhook are configured.
 
-**Webhook (automatic):** each production deploy runs `scripts/setup-stripe-webhook.ts`. The script:
-- registers a Stripe webhook endpoint at `NEXT_PUBLIC_SITE_URL/api/stripe/webhook`
-- subscribes it to `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed` and `checkout.session.expired`
-- saves the signing secret in the database, never in logs
-- reuses the existing endpoint on later deploys
+How a payment works: checkout creates the order and a Razorpay order, then opens Razorpay Checkout. When the customer pays, the browser sends the signed result back and the server verifies the signature before marking the order paid. The webhook marks it paid too, so a closed tab never loses a payment. Both paths are idempotent.
 
-If you change the domain, update `NEXT_PUBLIC_SITE_URL` and redeploy: the endpoint is replaced. **Admin → Settings → Payments** shows the status. To manage the endpoint yourself instead, set `STRIPE_WEBHOOK_SECRET` and the script steps aside.
+**Cash on Delivery** is on by default, with a ₹49 fee and a ₹10,000 order limit. Change or turn it off in **Admin → Settings → Payments**. COD orders are confirmed right away and stay "Unpaid" until you mark them paid after delivery.
+
+### GST
+Prices are entered **including GST** (B2C). Each product can carry an HSN code and its own GST rate (for example 5% for apparel, 18% for transfers); otherwise the default rate applies. Shipping, rush and COD fees use the "charges" GST rate. Invoices split the tax into **CGST + SGST** when the delivery state matches your store state, and **IGST** otherwise. Customers can add a GSTIN at checkout for input tax credit.
+
+Fill in **Admin → Settings → GST & invoices** (legal name, GSTIN, state) before going live. The invoice is titled "Tax invoice" once a GSTIN is set. Check the rates and HSN codes with your CA.
 
 ### Email notifications
 Order emails are sent through any SMTP provider, for example Gmail, Amazon SES, Resend, Postmark or Mailgun. Set them up in `.env`:
@@ -160,7 +169,7 @@ Then open **Admin → Settings → Email notifications** and click **Send test**
 
 | Email | When | Recipient |
 | --- | --- | --- |
-| Order confirmation | Payment succeeds (demo card, Stripe webhook, or admin "Mark paid") | Customer |
+| Order confirmation | Payment succeeds (Razorpay, demo payment or admin "Mark paid"), or a COD order is placed | Customer |
 | New order alert | Same moment; marked `[RUSH]` for rush orders | Your team (alert email or support email) |
 | Status update | Staff change status with "notify customer" on, for the statuses you pick in Settings. Shipped includes the tracking link | Customer |
 | Artwork changes | Prepress marks artwork "needs changes", with the note | Customer |
@@ -197,7 +206,7 @@ src/
     (studio)/        gang-sheet-builder, design-studio (full-screen editors)
     (auth)/          login, register, forgot-password
     admin/           admin panel
-    api/             upload, search, stripe webhook, admin CSV export
+    api/             upload, search, Razorpay webhook, admin CSV export
     uploads/         serves uploaded files
   components/
     ui/              shadcn/ui primitives
@@ -210,7 +219,7 @@ src/
 ```
 
 ### Pricing engine
-All prices are integer cents. `src/lib/pricing.ts` is shared by the browser, for live previews, and the server, for the authoritative total. Checkout re-prices every line from the database, so tampered client prices are ignored.
+All prices are integer paise (₹1 = 100) and include GST by default. `src/lib/pricing.ts` is shared by the browser, for live previews, and the server, for the authoritative total. Checkout re-prices every line from the database, so tampered client prices are ignored.
 
 ### Order lifecycle
 `PENDING → ARTWORK_REVIEW → IN_PRODUCTION → QUALITY_CHECK → READY → SHIPPED → DELIVERED`, plus `CANCELLED` / `REFUNDED`. Each change writes an `OrderEvent`. Events marked visible appear on the customer's order timeline and tracking page.
@@ -219,5 +228,6 @@ All prices are integer cents. `src/lib/pricing.ts` is shared by the browser, for
 
 - **Print files:** orders store a preview PNG plus the full design layout (positions in inches + source image URLs) for gang sheets and studio designs. A server-side job that renders the 300 DPI print-ready file from that layout is the natural next step for prepress.
 - **Email:** order and password emails are sent (see above). Contact-form auto-replies aren't built yet, and inbox replies open your mail app.
-- **Refunds:** refund and cancel in admin update the order only; they don't call Stripe.
+- **Refunds:** refund and cancel in admin update the order only; issue the money back from the Razorpay Dashboard.
+- **Shipping rates:** delivery is a flat rate per method. Courier APIs (Shiprocket, Delhivery) for live rates, PIN-code serviceability and AWB generation are not integrated yet.
 - **Gang sheet packing** uses bounding boxes (rectangles), not true shape nesting. PDF uploads can be ordered as files but not placed on the canvas.

@@ -21,12 +21,12 @@ const toc = [
 ];
 
 const fabricRows = [
-  { fabric: "100% cotton", temp: "310–320°F / 154–160°C", time: "12–15 s", pressure: "Medium–firm", peel: "Hot or cold" },
-  { fabric: "Poly-cotton blends", temp: "300–310°F / 149–154°C", time: "10–12 s", pressure: "Medium", peel: "Hot or cold" },
-  { fabric: "100% polyester", temp: "280–290°F / 138–143°C", time: "10–12 s", pressure: "Medium", peel: "Cold" },
-  { fabric: "Nylon / windbreakers", temp: "270–280°F / 132–138°C", time: "8–10 s", pressure: "Light–medium", peel: "Cold" },
-  { fabric: "Canvas, denim, totes", temp: "315–325°F / 157–163°C", time: "15–20 s", pressure: "Firm", peel: "Hot or cold" },
-  { fabric: "Fleece & hoodies", temp: "300–310°F / 149–154°C", time: "12–15 s", pressure: "Medium (use a pillow)", peel: "Cold" },
+  { fabric: "100% cotton", temp: "154–160°C / 310–320°F", time: "12–15 s", pressure: "Medium–firm", peel: "Hot or cold" },
+  { fabric: "Poly-cotton blends", temp: "149–154°C / 300–310°F", time: "10–12 s", pressure: "Medium", peel: "Hot or cold" },
+  { fabric: "100% polyester", temp: "138–143°C / 280–290°F", time: "10–12 s", pressure: "Medium", peel: "Cold" },
+  { fabric: "Nylon / windbreakers", temp: "132–138°C / 270–280°F", time: "8–10 s", pressure: "Light–medium", peel: "Cold" },
+  { fabric: "Canvas, denim, totes", temp: "157–163°C / 315–325°F", time: "15–20 s", pressure: "Firm", peel: "Hot or cold" },
+  { fabric: "Fleece & hoodies", temp: "149–154°C / 300–310°F", time: "12–15 s", pressure: "Medium (use a pillow)", peel: "Cold" },
 ];
 
 const compat: { surface: string; dtf: boolean; uv: boolean; sp: boolean }[] = [
@@ -43,8 +43,8 @@ const troubleshooting = [
   { problem: "Transfer won't release from the film", fix: "Press 5 seconds longer or increase pressure. If peeling hot, try waiting until fully cool and peel slowly at a low angle." },
   { problem: "Edges lifting after peeling", fix: "Re-press for 5–8 seconds with a teflon sheet or parchment on top. Use a pressing pillow so seams and zippers don't steal pressure." },
   { problem: "Shiny or glossy finish", fix: "Normal after the first press. A second 5-second press with a teflon sheet or kraft paper gives a soft matte finish." },
-  { problem: "Cracking after washing", fix: "Usually too little time or pressure. Confirm your press temperature with a heat gun — many presses run 20–30°F cooler than they display." },
-  { problem: "Dye migration on polyester", fix: "Lower the temperature to 270–280°F and peel cold. Sublimated or dark red polyester may need a blocker garment." },
+  { problem: "Cracking after washing", fix: "Usually too little time or pressure. Confirm your press temperature with a heat gun — many presses run 10–15°C cooler than they display." },
+  { problem: "Dye migration on polyester", fix: "Lower the temperature to 132–138°C and peel cold. Sublimated or dark red polyester may need a blocker garment." },
   { problem: "UV DTF decal bubbling", fix: "Clean the surface with isopropyl alcohol, apply on a flat or gently curved area, and burnish from the center outward with a squeegee." },
 ];
 
@@ -103,7 +103,7 @@ export default function PressInstructionsPage() {
             <p className="mb-6 text-muted-foreground">Works on light and dark garments. No weeding, no pre-treatment.</p>
             <div className="mb-8 grid gap-3 sm:grid-cols-3">
               {[
-                { icon: Thermometer, label: "Temperature", value: "300–315°F", sub: "149–157°C" },
+                { icon: Thermometer, label: "Temperature", value: "150–160°C", sub: "300–315°F" },
                 { icon: Timer, label: "Time", value: "10–15 sec", sub: "+ 5 s finishing press" },
                 { icon: Gauge, label: "Pressure", value: "Medium–firm", sub: "40–60 PSI" },
               ].map(({ icon: Icon, label, value, sub }) => (
@@ -173,12 +173,12 @@ export default function PressInstructionsPage() {
               <div className="rounded-2xl border bg-card p-5">
                 <Flame className="mb-3 size-5 text-ink-magenta" />
                 <p className="font-semibold">Standard plastisol</p>
-                <p className="mt-1 text-sm text-muted-foreground">350°F (177°C) · 7–8 seconds · firm pressure · peel hot immediately.</p>
+                <p className="mt-1 text-sm text-muted-foreground">177°C (350°F) · 7–8 seconds · firm pressure · peel hot immediately.</p>
               </div>
               <div className="rounded-2xl border bg-card p-5">
                 <Flame className="mb-3 size-5 text-ink-yellow" />
                 <p className="font-semibold">Puff transfers</p>
-                <p className="mt-1 text-sm text-muted-foreground">330°F (166°C) · 10 seconds · light pressure so the ink can rise · peel hot.</p>
+                <p className="mt-1 text-sm text-muted-foreground">166°C (330°F) · 10 seconds · light pressure so the ink can rise · peel hot.</p>
               </div>
             </div>
           </section>

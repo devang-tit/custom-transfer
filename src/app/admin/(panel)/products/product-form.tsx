@@ -68,6 +68,8 @@ type FormState = {
   description: string;
   badge: string;
   turnaround: string;
+  hsnCode: string;
+  gstRate: string;
   images: string[];
   basePrice: string;
   compareAtPrice: string;
@@ -97,6 +99,8 @@ function fromDTO(p?: ProductDTO): FormState {
     description: p?.description ?? "",
     badge: p?.badge ?? "",
     turnaround: p?.turnaround ?? "",
+    hsnCode: p?.hsnCode ?? "",
+    gstRate: p?.gstRate != null ? String(p.gstRate) : "",
     images: p?.images ?? [],
     basePrice: d(p?.basePrice ?? 0),
     compareAtPrice: d(p?.compareAtPrice ?? null),
@@ -131,6 +135,8 @@ function toInput(s: FormState, id?: string): ProductInput {
     description: s.description,
     badge: s.badge,
     turnaround: s.turnaround,
+    hsnCode: s.hsnCode.trim(),
+    gstRate: s.gstRate.trim() === "" ? null : Number(s.gstRate),
     images: s.images,
     basePrice: c(s.basePrice),
     compareAtPrice: s.compareAtPrice ? c(s.compareAtPrice) : null,
@@ -206,6 +212,8 @@ export function ProductForm({ product, categories }: { product?: ProductDTO; cat
     features: input.features,
     badge: s.badge || null,
     turnaround: s.turnaround || null,
+    hsnCode: s.hsnCode.trim() || null,
+    gstRate: s.gstRate.trim() === "" ? null : Number(s.gstRate),
     stock: input.stock,
     featured: s.featured,
     active: s.active,
@@ -489,6 +497,12 @@ export function ProductForm({ product, categories }: { product?: ProductDTO; cat
               <Field label="Turnaround">
                 <Input value={s.turnaround} onChange={(e) => set("turnaround", e.target.value)} placeholder="Ships in 24 hours" />
               </Field>
+              <Field label="HSN / SAC code" hint="Printed on GST invoices, e.g. 4911 or 6109.">
+                <Input value={s.hsnCode} inputMode="numeric" maxLength={8} onChange={(e) => set("hsnCode", e.target.value.replace(/[^0-9]/g, ""))} placeholder="4911" />
+              </Field>
+              <Field label="GST rate (%)" hint="Leave blank to use the store default.">
+                <Input type="number" step="0.01" min={0} max={28} value={s.gstRate} onChange={(e) => set("gstRate", e.target.value)} placeholder="18" />
+              </Field>
               <Field label="Compare-at price" hint="Shows a strikethrough “was” price.">
                 <MoneyInput value={s.compareAtPrice} onChange={(v) => set("compareAtPrice", v)} placeholder="—" />
               </Field>
@@ -575,7 +589,7 @@ function ToggleRow({ label, description, checked, onChange }: { label: string; d
 function MoneyInput({ value, onChange, placeholder, className }: { value: string; onChange: (v: string) => void; placeholder?: string; className?: string }) {
   return (
     <div className={cn("relative", className)}>
-      <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+      <span className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-sm text-muted-foreground">₹</span>
       <Input
         type="number"
         inputMode="decimal"

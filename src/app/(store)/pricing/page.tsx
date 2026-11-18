@@ -18,9 +18,9 @@ export const metadata: Metadata = {
 };
 export const dynamic = "force-dynamic";
 
-function perSqIn(cents: number, w: number, h: number) {
-  const v = cents / 100 / (w * h);
-  return `$${v.toFixed(3)}`;
+function perSqIn(paise: number, w: number, h: number) {
+  const v = paise / 100 / (w * h);
+  return `₹${v.toFixed(2)}`;
 }
 
 function TierTable({ product, highlight }: { product: ProductDTO; highlight?: boolean }) {
@@ -126,14 +126,14 @@ export default async function PricingPage() {
             Honest pricing. <span className="text-ink-gradient">Bigger runs, bigger savings.</span>
           </>
         }
-        description="No setup fees, no screen charges, no minimums on DTF. Pay per transfer or pack a gang sheet — the price you see is the price you pay."
+        description="No setup fees, no screen charges, no minimums on DTF. Pay per transfer or pack a gang sheet — prices include GST, so the price you see is the price you pay."
       >
         <div className="grid w-full max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4">
           {[
             { icon: Sparkles, value: `${formatMoney(lowest)}`, label: "Transfers from" },
             { icon: BadgePercent, value: `Up to ${maxDiscount}%`, label: "Bulk discounts" },
-            { icon: Truck, value: formatMoney(settings.freeShippingThreshold).replace(".00", ""), label: "Free shipping over" },
-            { icon: Clock, value: "Same day", label: "Production before 2pm" },
+            { icon: Truck, value: formatMoney(settings.freeShippingThreshold), label: "Free delivery above" },
+            { icon: Clock, value: "Same day", label: "Production before 2 pm IST" },
           ].map(({ icon: Icon, value, label }) => (
             <div key={label} className="rounded-2xl border bg-card/80 p-4 text-left backdrop-blur">
               <Icon className="mb-2 size-5 text-primary" />

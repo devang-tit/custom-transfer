@@ -160,7 +160,7 @@ export function ImageWithText({
 const STEPS = [
   { title: "Upload or build", body: "Send a PNG, PDF or SVG, or arrange designs in the gang sheet builder with automatic packing and resolution checks." },
   { title: "We print and cure", body: "Every transfer is printed on calibrated DTF lines, powdered, cured and checked by hand before it ships." },
-  { title: "You press", body: "Press at 300–315°F for 10–15 seconds and peel hot or cold. Soft, stretchy and wash-tested for 50+ cycles." },
+  { title: "You press", body: "Press at 150–160°C for 10–15 seconds and peel hot or cold. Soft, stretchy and wash-tested for 50+ cycles." },
 ];
 
 export function HowItWorks() {

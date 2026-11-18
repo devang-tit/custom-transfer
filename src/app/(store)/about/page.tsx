@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 const values = [
   { icon: Droplets, title: "Color obsessed", body: "Calibrated printers, ICC-profiled film and daily nozzle checks mean your reds stay red and your skin tones look human." },
-  { icon: Gauge, title: "Speed without shortcuts", body: "Same-day production on orders placed before 2pm CT — and every sheet still gets cured and inspected by hand." },
+  { icon: Gauge, title: "Speed without shortcuts", body: "Same-day production on orders placed before 2 pm IST — and every sheet still gets cured and inspected by hand." },
   { icon: HeartHandshake, title: "Real humans", body: "Our prepress team checks every file and emails you before printing anything that might disappoint." },
   { icon: Leaf, title: "Lower-impact inks", body: "Water-based, Oeko-Tex certified pigment inks and recyclable packaging wherever we can." },
 ];

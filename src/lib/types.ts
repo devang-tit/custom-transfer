@@ -111,7 +111,8 @@ export type StoreSettings = {
   storeName: string;
   supportEmail: string;
   supportPhone: string;
-  taxRate: number; // percent, e.g. 8.25
+  /** Default GST % for products without their own rate */
+  taxRate: number;
   freeShippingThreshold: number; // cents
   rushFeePct: number; // percent of subtotal
   shippingMethods: ShippingMethod[];
@@ -119,6 +120,24 @@ export type StoreSettings = {
   announcementEnabled: boolean;
   orderPrefix: string;
   notifications: NotificationSettings;
+
+  /* ---- India: GST ---- */
+  /** Catalog prices already include GST (B2C standard); tax is shown as "included". */
+  pricesIncludeTax: boolean;
+  /** Registered business name and GSTIN printed on tax invoices */
+  legalName: string;
+  gstin: string;
+  /** Seller's state code (e.g. "GJ"): same-state orders get CGST+SGST, others IGST */
+  storeState: string;
+  /** GST % on shipping, rush and COD charges */
+  chargesGstRate: number;
+
+  /* ---- Cash on delivery ---- */
+  codEnabled: boolean;
+  /** COD handling fee in paise (0 = free) */
+  codFee: number;
+  /** COD only allowed up to this order total, in paise */
+  codMaxOrder: number;
 };
 
 export type CouponLike = {

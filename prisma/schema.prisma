@@ -1,5 +1,5 @@
 // InkForge — custom transfers & apparel printing store.
-// PostgreSQL (Vercel: Prisma Postgres integration provides DATABASE_URL).
+// PostgreSQL (Vercel: Prisma Postgres integration provides DATABASE_URL). Amounts are integer paise (Rs 1 = 100).
 // Schema changes: edit this file, then `npm run db:migrate -- --name <change>` against a dev database.
 // JSON payloads are stored as String (parsed in src/lib/json.ts).
 
@@ -78,6 +78,8 @@ model Product {
   tiers            String         @default("[]") // PriceTier[]
   features         String         @default("[]") // string[] bullet highlights
   badge            String? // "Best seller", "New", ...
+  hsnCode          String? // HSN/SAC code printed on GST invoices
+  gstRate          Float? // GST % (null = store default)
   turnaround       String? // "Ships same day"
   stock            Int? // null = made to order
   featured         Boolean        @default(false)
@@ -149,6 +151,8 @@ model Order {
   tax             Int          @default(0)
   total           Int
   couponCode      String?
+  codFee          Int          @default(0) // cash-on-delivery fee (included in total)
+  customerGstin   String? // buyer GSTIN for B2B tax invoices
   isRush          Boolean      @default(false)
   notes           String?
   internalNotes   String?
@@ -177,6 +181,8 @@ model OrderItem {
   total         Int
   artworkUrl    String?
   designId      String?
+  hsnCode       String?
+  gstRate       Float? // GST % applied to this line (captured at checkout)
   artworkStatus String   @default("PENDING") // PENDING | APPROVED | NEEDS_CHANGES
   artworkNote   String?
 }

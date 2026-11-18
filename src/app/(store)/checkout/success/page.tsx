@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { OrderStatusBadge } from "@/components/shared/status-badge";
 import { TotalsTable } from "@/components/store/checkout/totals";
 import { CelebrationBadge, ClearCartOnMount, CopyOrderNumber } from "@/components/store/checkout/success-client";
-import { getStripe, markOrderPaid, stripeEnabled } from "@/app/(store)/_actions/payment-lib";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -21,26 +20,12 @@ export const metadata: Metadata = { title: "Order confirmed", robots: { index: f
 export default async function SuccessPage(props: PageProps<"/checkout/success">) {
   const sp = await props.searchParams;
   const number = typeof sp.order === "string" ? sp.order.slice(0, 30) : "";
-  const sessionId = typeof sp.session_id === "string" ? sp.session_id : null;
   const [jar, session, settings] = await Promise.all([cookies(), getSession(), getSettings()]);
 
-  let order = number
+  const order = number
     ? await db.order.findUnique({ where: { number }, include: { items: true } })
     : null;
   const allowed = !!order && (jar.get("if_last_order")?.value === order.number || (!!session && session.sub === order.userId));
-
-  // Fallback confirmation when Stripe webhooks aren't reachable (e.g. local dev).
-  if (order && allowed && sessionId && stripeEnabled() && order.paymentStatus !== "PAID" && order.paymentRef === sessionId) {
-    try {
-      const s = await getStripe().checkout.sessions.retrieve(sessionId);
-      if (s.payment_status === "paid" && s.metadata?.orderId === order.id) {
-        await markOrderPaid(order.id, typeof s.payment_intent === "string" ? s.payment_intent : s.id);
-        order = await db.order.findUnique({ where: { id: order.id }, include: { items: true } });
-      }
-    } catch {
-      /* ignore — webhook will reconcile */
-    }
-  }
 
   if (!order || !allowed) {
     return (
@@ -60,9 +45,10 @@ export default async function SuccessPage(props: PageProps<"/checkout/success">)
   const address = parseJson<AddressInput | null>(order.shippingAddress, null);
   const method = settings.shippingMethods.find((m) => m.id === order.shippingMethod);
   const paid = order.paymentStatus === "PAID";
+  const cod = order.paymentMethod === "cod";
   const steps = [
     { icon: FileSearch, title: "Artwork review", body: "Prepress checks every file — usually within 2 business hours.", active: order.status === "ARTWORK_REVIEW" },
-    { icon: Printer, title: "Printing & curing", body: order.isRush ? "Rush: printed within 4 business hours of approval." : "Same-day production for approvals before 2pm CT.", active: order.status === "IN_PRODUCTION" },
+    { icon: Printer, title: "Printing & curing", body: order.isRush ? "Rush: printed within 4 business hours of approval." : "Same-day production for approvals before 2 pm IST.", active: order.status === "IN_PRODUCTION" },
     { icon: Truck, title: method?.id === "pickup" ? "Ready for pickup" : "Shipped to you", body: method ? `${method.label} · ${method.description}` : "Tracking emailed when it ships.", active: false },
   ];
 
@@ -73,11 +59,16 @@ export default async function SuccessPage(props: PageProps<"/checkout/success">)
       <div className="container-page relative py-14 sm:py-20">
         <div className="mx-auto max-w-2xl text-center">
           <CelebrationBadge />
-          <p className="mt-8 text-sm font-semibold tracking-[0.16em] text-primary uppercase">{paid ? "Payment received" : "Order received"}</p>
+          <p className="mt-8 text-sm font-semibold tracking-[0.16em] text-primary uppercase">{paid ? "Payment received" : cod ? "Cash on Delivery" : "Order received"}</p>
           <h1 className="mt-2 text-4xl font-bold sm:text-5xl">Thanks, {order.customerName.split(" ")[0]}! Your order is in.</h1>
           <p className="mt-4 text-muted-foreground">
             A confirmation is on its way to <strong className="text-foreground">{order.email}</strong>.
           </p>
+          {cod && !paid && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              Please keep <strong className="text-foreground">{formatMoney(order.total)}</strong> ready to pay when your parcel arrives.
+            </p>
+          )}
           <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
             <CopyOrderNumber number={order.number} />
             <OrderStatusBadge status={order.status} />
@@ -118,7 +109,7 @@ export default async function SuccessPage(props: PageProps<"/checkout/success">)
             </ul>
             <TotalsTable
               className="mt-4 border-t pt-4"
-              totals={{ subtotal: order.subtotal, discount: order.discount, shipping: order.shipping, rushFee: order.rushFee, tax: order.tax, total: order.total, freeShippingApplied: order.shipping === 0, freeShippingRemaining: 0 }}
+              totals={{ subtotal: order.subtotal, discount: order.discount, shipping: order.shipping, rushFee: order.rushFee, codFee: order.codFee, tax: order.tax, taxIncluded: settings.pricesIncludeTax, total: order.total, freeShippingApplied: order.shipping === 0, freeShippingRemaining: 0 }}
               shippingLabel={method?.label ?? "Shipping"}
             />
           </section>
@@ -128,7 +119,7 @@ export default async function SuccessPage(props: PageProps<"/checkout/success">)
                 <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">{method?.id === "pickup" ? "Pickup contact" : "Shipping to"}</p>
                 <p className="mt-2 font-medium">{address.name}</p>
                 <p className="text-muted-foreground">{address.line1}{address.line2 ? `, ${address.line2}` : ""}</p>
-                <p className="text-muted-foreground">{address.city}, {address.state} {address.zip}</p>
+                <p className="text-muted-foreground">{address.city}, {address.state} – {address.zip}</p>
               </div>
             )}
             <Button asChild className="h-11 w-full rounded-xl">
